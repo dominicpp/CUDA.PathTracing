@@ -12,5 +12,5 @@ struct RecordHit final {
 class Hit {
 public:
 	Hit() = default;
-	__host__ __device__ virtual bool hitIntersect(const Ray& r, float tmin, float tmax, RecordHit& record) const = 0;
+	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const = 0;
 };

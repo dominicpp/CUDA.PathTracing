@@ -1,24 +1,25 @@
-//#pragma once
-//
-//#include "hit.cuh"
-//
-//class Plane : public Hit
-//{
-//public:
-//	Vec3 color, normVec, anchorP;
-//
-//	Plane(Vec3 anchorP, Vec3 normVec, Vec3 color) : anchorP(anchorP), normVec(normVec), color(color) {}
-//
-//	__host__ __device__ virtual bool hit(const Ray& r, float tmin, float tmax, RecordHit& record) const override;
-//};
-//
-//bool Plane::hit(const Ray& r, float tmin, float tmax, RecordHit& record) const
-//{
-//	float t = (dot(anchorP, normVec) - dot(normVec, r.getOrigin()) / dot(r.getDirection(), normVec));
-//	if (t > r.getTmin() && t < r.getTmax())
-//	{
-//		Vec3 point = r.pointAt(t);
-//		return true;
-//	}
-//	return false;
-//}
+#pragma once
+
+#include "hit.cuh"
+
+class Plane : public Hit
+{
+public:
+	Vec3 normalVector, anchorPoint;
+
+	Plane(Vec3 normVec, Vec3 anchorP) : anchorPoint(anchorP), normalVector(normVec) {}
+
+	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const override;
+};
+
+bool Plane::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const
+{
+	float t = (dot(anchorPoint, normalVector) - dot(normalVector, ray.getOrigin()) / dot(ray.getDirection(), normalVector));
+	if (t < tmax && t > tmin)
+	{
+		record.rayParameter = t;
+		record.positionHit = ray.pointAt(record.rayParameter);
+		return true;
+	}
+	return false;
+}

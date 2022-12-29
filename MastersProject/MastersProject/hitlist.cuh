@@ -10,17 +10,17 @@ public:
 
 	Hitlist() = default;
 	Hitlist(Hit** l, int n) : list(l), list_size(n) {};
-	__host__ __device__ virtual bool hitIntersect(const Ray& r, float tmin, float tmax, RecordHit& record) const override;
+	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const override;
 };
 
-bool Hitlist::hitIntersect(const Ray& r, float tmin, float tmax, RecordHit& record) const
+bool Hitlist::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const
 {
 	RecordHit t;
 	bool hit = false;
 	float m = tmax;
 	for (int i = 0; i < list_size; i++)
 	{
-		if (list[i]->hitIntersect(r, tmin, m, t))
+		if (list[i]->hitIntersect(ray, tmin, m, t))
 		{
 			hit = true;
 			m = t.rayParameter;
