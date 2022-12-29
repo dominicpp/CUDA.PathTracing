@@ -42,10 +42,10 @@ int main()
     float aspect_ratio = (16 / 8.5);
     int width = 1000;
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 32;
+    int sampler = 16;
     float gamma = 2.2f;
 
-    std::ofstream out("out3.ppm");
+    std::ofstream out("doc/out2.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* list[6];
