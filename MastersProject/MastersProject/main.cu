@@ -40,12 +40,12 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
 int main()
 {
     float aspect_ratio = (16 / 8.5);
-    int width = 1000;
+    int width = 1920;
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 4;
+    int sampler = 400;
     float gamma = 2.2f;
 
-    std::ofstream out("doc/out_plane.ppm");
+    std::ofstream out("doc/img1.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* list[6];
@@ -66,7 +66,7 @@ int main()
     auto a = std::chrono::high_resolution_clock::now();
     for (int y = height - 1; y >= 00; y--)
     {
-        std::cerr << "\rScanlines reamining: " << y << ' ' << std::flush;
+        std::cerr << "\rRemaining lines scanning: " << y << ' ' << std::flush;
         for (int x = 0; x < width; x++)
         {
             Vec3 imagePixel(0, 0, 0);
@@ -76,7 +76,7 @@ int main()
                 float v = float(y + random_double()) / float(height);
 
                 Ray ray = camera->generateRay(u, v);
-                imagePixel += calculateRadiance(ray, scene, 4);
+                imagePixel += calculateRadiance(ray, scene, 50);
             }
             imagePixel /= float(sampler);
 

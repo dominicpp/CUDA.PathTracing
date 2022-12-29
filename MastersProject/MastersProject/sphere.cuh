@@ -30,7 +30,8 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& rec
 		if (t1 < t2) t = t1;
 		else t = t2; 
 
-		if (t < tmax && t > tmin)
+		// if (t < tmax && t > tmin)
+		if (tmin < t && t < tmax)
 		{
 			record.rayParameter = t;
 			record.positionHit = ray.pointAt(record.rayParameter);
