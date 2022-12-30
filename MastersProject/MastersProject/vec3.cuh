@@ -211,3 +211,8 @@ Vec3 random_in_unit_sphere() {
     } while (p.squared_length() >= 1.0);
     return p;
 }
+
+Vec3 reflect(const Vec3& v, const Vec3& n)
+{
+    return v - 2 * dot(v, n) * n;
+}

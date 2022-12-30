@@ -3,10 +3,13 @@
 #include "vec3.cuh"
 #include "ray.cuh"
 
+class Material;
+
 struct RecordHit final {
 	float rayParameter;
 	Vec3 positionHit;
 	Vec3 normalVector;
+	Material* material;
 };
 
 class Hit {

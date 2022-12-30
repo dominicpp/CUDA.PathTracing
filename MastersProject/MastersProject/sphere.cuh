@@ -3,12 +3,15 @@
 #include "hit.cuh"
 #include "ray.cuh"
 
+class Material;
+
 class Sphere : public Hit {
 	Vec3 position;
 	float radius;
+	Material* material;
 public:
 	Sphere() = default;
-	Sphere(Vec3 p, float r) : position(p), radius(r) {};
+	Sphere(Vec3 p, float r, Material* m) : position(p), radius(r), material(m) {};
 	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const override;
 };
 
@@ -36,6 +39,7 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& rec
 			record.rayParameter = t;
 			record.positionHit = ray.pointAt(record.rayParameter);
 			record.normalVector = (record.positionHit - position) / radius;
+			record.material = material;
 			return true;
 		}
 	}
