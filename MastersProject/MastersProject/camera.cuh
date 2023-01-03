@@ -16,7 +16,12 @@ public:
 
     Vec3 direction(float x, float y)
     {
-        return (origin - (horizontal / 2) - (vertical / 2) - Vec3(0, 0.2, 0.8)) + (x * horizontal) + (y * vertical);
+        Vec3 cameraPos(0.0, 0.2, 0.8);
+        Vec3 corner = origin - (horizontal / 2) - (vertical / 2);
+        auto xx = x * horizontal;
+        auto yy = y * vertical;
+        // return (corner - cameraPos) + (x * horizontal) + (y * vertical);
+        return (corner - cameraPos) + (xx + yy);
     }
 
     Ray generateRay(float x, float y) 

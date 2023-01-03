@@ -14,7 +14,7 @@ public:
 
 bool Plane::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const
 {
-	float t = (dot(anchorPoint, normalVector) - dot(normalVector, ray.getOrigin()) / dot(ray.getDirection(), normalVector));
+	float t = (dotProduct(anchorPoint, normalVector) - dotProduct(normalVector, ray.getOrigin()) / dotProduct(ray.getDirection(), normalVector));
 	if (tmin < t && t < tmax)
 	{
 		record.rayParameter = t;
