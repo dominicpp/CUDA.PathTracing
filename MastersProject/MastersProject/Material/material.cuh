@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hit.cuh"
+#include "../Hit/hit.cuh"
 
 struct RecordHit;
 

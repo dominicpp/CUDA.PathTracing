@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vec3.cuh"
-#include "ray.cuh"
+#include "../Utils/vec3.cuh"
+#include "../Ray/ray.cuh"
 
 class Material;
 

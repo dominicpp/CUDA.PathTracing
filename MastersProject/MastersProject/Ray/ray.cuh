@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec3.cuh"
+#include "../Utils/vec3.cuh"
 
 class Ray
 {

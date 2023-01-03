@@ -10,16 +10,16 @@
 #include <chrono>
 #include <limits>
 
-#include "ray.cuh"
-#include "hit.cuh"
-#include "sphere.cuh"
-#include "plane.cuh"
-#include "hitlist.cuh"
-#include "camera.cuh"
+#include "../Ray/ray.cuh"
+#include "../Hit/hit.cuh"
+#include "../Objects/sphere.cuh"
+#include "../Objects/plane.cuh"
+#include "../Hit/hitlist.cuh"
+#include "../Camera/camera.cuh"
 // #include "material.cuh"
-#include "diffuse.cuh"
-#include "polishedMetal.cuh"
-#include "mirror.cuh"
+#include "../Material/diffuse.cuh"
+#include "../Material/polishedMetal.cuh"
+#include "../Material/mirror.cuh"
 
 // Recursion -> Ray bouncing around / Path Tracing
 __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth)
@@ -32,10 +32,10 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
     {
         // Spheres
         Ray scattered;
-        Vec3 attenuation;
-        if (depth <= 50 && record.material->scatteredRay(ray, record, attenuation, scattered))
+        Vec3 weakening;
+        if (depth <= 50 && record.material->scatteredRay(ray, record, weakening, scattered))
         {
-            return attenuation * calculateRadiance(scattered, scene, depth - 1);
+            return weakening * calculateRadiance(scattered, scene, depth - 1);
         }
         else {
             return Vec3(0.0, 0.0, 0.0);
@@ -55,7 +55,7 @@ int main()
     int sampler = 20; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/test8_after_many_changes.ppm");
+    std::ofstream out("doc/test9_after_many_changes2.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* list[10];

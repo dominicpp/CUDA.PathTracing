@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hit.cuh"
-#include "ray.cuh"
+#include "../Hit/hit.cuh"
+#include "../Ray/ray.cuh"
 
 class Material;
 
@@ -21,7 +21,7 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& rec
 	float a = dotProduct(ray.getDirection(), ray.getDirection());
 	float b = dotProduct(newPosition, ray.getDirection());
 	float c = dotProduct(newPosition, newPosition) - pow(radius, 2);
-	float discriminant = pow(b, 2) - a * c;
+	float discriminant = pow(b, 2) - (a * c);
 	float t;
 
 	if (discriminant < 0) return false;

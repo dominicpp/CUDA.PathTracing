@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ray.cuh"
+#include "../Ray/ray.cuh"
 
 class Camera
 {
