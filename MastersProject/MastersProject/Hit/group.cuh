@@ -6,28 +6,29 @@
 
 class Group : public Hit
 {
-	std::vector<Hit*> shapes;
+	Hit** m_shapes;
+	int m_size;
 
 public:
 	Group() = default;
-	Group(std::vector<Hit*> s) : shapes(s) {};
+	Group(Hit** shapes, int size) : m_shapes(shapes), m_size(size) {};
 
-	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const override;
+	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const override;
 };
 
-bool Group::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& record) const
+bool Group::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const
 {
-	RecordHit h;
-	bool hit = false;
-
-	for (const auto& shape : shapes)
+	RecordHit temp_hit;
+	bool hits = false;
+	
+	for (int i = 0; i < m_size; ++i)
 	{
-		if (shape->hitIntersect(ray, tmin, tmax, h))
+		if (m_shapes[i]->hitIntersect(ray, tmin, tmax, temp_hit) && (temp_hit.rayParameter < tmax))
 		{
-			hit = true;
-			tmax = h.rayParameter;
-			record = h;
+			hits = true;
+			tmax = temp_hit.rayParameter;
+			hit = temp_hit;
 		}
 	}
-	return hit;
+	return hits;
 }

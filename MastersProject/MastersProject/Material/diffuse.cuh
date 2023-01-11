@@ -15,16 +15,16 @@
 
 class Diffuse : public Material
 {
-	Vec3 albedo;
+	Vec3 m_albedo;
 
 public:
 	Diffuse() = default;
-	Diffuse(const Vec3& albedo) : albedo(albedo) {}
+	Diffuse(const Vec3& albedo) : m_albedo(albedo) {}
 
-	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& record, Vec3& weakening, Ray& scattered) const override;
+	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening, Ray& scattered) const override;
 };
 
-bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& record, Vec3& weakening, Ray& scattered) const
+bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening, Ray& scattered) const
 {
 	// https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
 	// Monte Carlo Integration!
@@ -38,8 +38,8 @@ bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& record, Vec3& weaken
 		// printf(" Point: %f ", sum);
 	} while (sum >= 1.0);
 
-	Vec3 target = record.positionHit + normalize(record.normalVector + Vec3(xRnd, yRnd, zRnd));
-	scattered = Ray(record.positionHit, target - record.positionHit);
-	weakening = albedo;
+	Vec3 target = hit.positionHit + normalize(hit.normalVector + Vec3(xRnd, yRnd, zRnd));
+	scattered = Ray(hit.positionHit, target - hit.positionHit);
+	weakening = m_albedo;
 	return true;
 }

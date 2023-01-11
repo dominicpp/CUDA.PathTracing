@@ -4,25 +4,25 @@
 
 class Camera
 {
-    Vec3 horizontal, vertical, origin;
+    Vec3 m_horizontal, m_vertical, m_origin;
 
 public:
 	Camera() = default;
-    Camera(double x, double y)
+    Camera(double width, double height)
     {
-        horizontal = Vec3(x, 0.0, 0.0);
-        vertical = Vec3(0.0, y, 0.0);
-        origin = Vec3(0.0, 0.0, 0.0);
+        m_horizontal = Vec3(width, 0.0, 0.0);
+        m_vertical = Vec3(0.0, height, 0.0);
+        m_origin = Vec3(0.0, 0.0, 0.0);
     }
 
-    Vec3 direction(float x, float y)
+    Vec3 direction(float width, float height)
     {
         Vec3 cameraPos(0.0, 0.2, 0.8);
-        Vec3 corner = origin - (horizontal / 2) - (vertical / 2);
-        auto xx = x * horizontal;
-        auto yy = y * vertical;
-        return (corner - cameraPos) + (xx + yy);
+        Vec3 corner = m_origin - (m_horizontal / 2) - (m_vertical / 2);
+        auto x = width * m_horizontal;
+        auto y = height * m_vertical;
+        return (corner - cameraPos) + (x + y);
     }
 
-    Ray generateRay(float x, float y) { return Ray(origin, direction(x, y)); }
+    Ray generateRay(float width, float height) { return Ray(m_origin, direction(width, height)); }
 };
