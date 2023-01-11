@@ -4,9 +4,10 @@
 
 class PolishedMetal : public Material
 {
-public:
 	Vec3 albedo;
 	int scatter_factor;
+
+public:
 	PolishedMetal() = default;
 	PolishedMetal(const Vec3& albedo, double sf) : albedo(albedo), scatter_factor(sf) {}
 	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& record, Vec3& weakening, Ray& scattered) const override;

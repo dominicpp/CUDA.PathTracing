@@ -5,6 +5,7 @@
 class Ray
 {
 	Vec3 origin, direction;
+
 public:
 	__host__ __device__ Ray() = default;
 	__host__ __device__ Ray(const Vec3& orig, const Vec3& dir) : origin(orig), direction(dir) {}

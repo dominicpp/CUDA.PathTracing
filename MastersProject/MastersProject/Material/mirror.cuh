@@ -4,10 +4,12 @@
 
 class Mirror : public Material
 {
-public:
 	Vec3 albedo;
+
+public:
 	Mirror() = default;
 	Mirror(const Vec3& albedo) : albedo(albedo) {}
+
 	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& record, Vec3& weakening, Ray& scattered) const override;
 };
 

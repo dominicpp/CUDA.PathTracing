@@ -5,6 +5,7 @@
 class Camera
 {
     Vec3 horizontal, vertical, origin;
+
 public:
 	Camera() = default;
     Camera(double x, double y)
@@ -20,12 +21,8 @@ public:
         Vec3 corner = origin - (horizontal / 2) - (vertical / 2);
         auto xx = x * horizontal;
         auto yy = y * vertical;
-        // return (corner - cameraPos) + (x * horizontal) + (y * vertical);
         return (corner - cameraPos) + (xx + yy);
     }
 
-    Ray generateRay(float x, float y) 
-    { 
-        return Ray(origin, direction(x, y));
-    }
+    Ray generateRay(float x, float y) { return Ray(origin, direction(x, y)); }
 };
