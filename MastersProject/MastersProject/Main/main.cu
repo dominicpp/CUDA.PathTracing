@@ -1,22 +1,15 @@
 ﻿#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <fstream>
-
-#include <stdlib.h>
-
-#include <stdio.h>
 #include <iostream>
-#include <algorithm>
 #include <chrono>
-#include <limits>
-#include <vector>
 
 #include "../Ray/ray.cuh"
+#include "../Camera/camera.cuh"
 #include "../Hit/hit.cuh"
+#include "../Hit/group.cuh"
 #include "../Objects/sphere.cuh"
 #include "../Objects/plane.cuh"
-#include "../Hit/group.cuh"
-#include "../Camera/camera.cuh"
 #include "../Material/diffuse.cuh"
 #include "../Material/polishedmetal.cuh"
 #include "../Material/mirror.cuh"
@@ -46,10 +39,10 @@ int main()
     float aspect_ratio = (16 / 8.5);
     int width = 800;
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 300; // rays per pixel
+    int sampler = 20; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/test13_after_refactoring.ppm");
+    std::ofstream out("doc/test15.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit *shapes[10];
@@ -58,8 +51,8 @@ int main()
     shapes[2] = new Sphere(Vec3(0, 0, -0.25), 0.05, new PolishedMetal(Vec3(1, 1, 1), 0)); // glass sphere infront of camera
     shapes[3] = new Sphere(Vec3(0.78, -0.15, -1), 0.3, new PolishedMetal(Vec3(0.2, 0.6, 0.8), 1)); // blue metal sphere
     shapes[4] = new Sphere(Vec3(-0.78, -0.15, -1), 0.3, new Diffuse(Vec3(1, 0, 0))); // red diffuse sphere
-    shapes[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1, 1, 1))); // sphere down right
-    shapes[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1, 1, 1))); // sphere down left
+    shapes[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1, 1, 1))); // mirror sphere down right
+    shapes[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1, 1, 1))); // mirror sphere down left
     shapes[7] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(0.6, 0.8, 0.2), 1)); // sphere up right
     shapes[8] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.8, 0.3, 0.1))); // sphere up left
     shapes[9] = new Sphere(Vec3(0, -100.5, -1), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
@@ -82,7 +75,7 @@ int main()
                 float ys = float(y + random_double()) / float(height);
 
                 Ray ray = camera->generateRay(xs, ys);
-                imagePixel += calculateRadiance(ray, scene, 48);
+                imagePixel += calculateRadiance(ray, scene, 12);
             }
             imagePixel /= float(sampler);
 

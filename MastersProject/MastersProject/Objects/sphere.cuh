@@ -21,16 +21,16 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit
 {
 	Vec3 newPosition = ray.getOrigin() - m_position;
 	float a = dotProduct(ray.getDirection(), ray.getDirection());
-	float b = dotProduct(newPosition, ray.getDirection());
+	float b = 2 * dotProduct(newPosition, ray.getDirection());
 	float c = dotProduct(newPosition, newPosition) - pow(m_radius, 2);
-	float discriminant = pow(b, 2) - (a * c);
+	float discriminant = pow(b, 2) - (4 * a * c);
 	float t;
 
 	if (discriminant < 0) return false;
 	if (discriminant >= 0)
 	{
-		float t1 = (-(b + sqrt(discriminant))) / a;
-		float t2 = (-(b - sqrt(discriminant))) / a;
+		float t1 = (-(b + sqrt(discriminant))) / (2 * a);
+		float t2 = (-(b - sqrt(discriminant))) / (2 * a);
 
 		if (t1 < t2) t = t1;
 		else t = t2; 

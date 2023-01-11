@@ -1,8 +1,6 @@
 #pragma once
 
 #include "hit.cuh"
-#include <iostream>
-#include <vector>
 
 class Group : public Hit
 {
