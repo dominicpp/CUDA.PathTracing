@@ -8,7 +8,7 @@ class Camera
 
 public:
 	Camera() = default;
-    Camera(double width, double height)
+    Camera(float width, float height)
     {
         m_horizontal = Vec3(width, 0.0, 0.0);
         m_vertical = Vec3(0.0, height, 0.0);
