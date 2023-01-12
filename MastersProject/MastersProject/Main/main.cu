@@ -38,10 +38,10 @@ int main()
     float aspect_ratio = (16 / 8.5);
     int width = 2560; // 2k
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 20; // rays per pixel
+    int sampler = 500; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/test18_final.ppm");
+    std::ofstream out("doc/test19_final.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* shapes[10];
@@ -74,7 +74,7 @@ int main()
                 float ys = float(y + random_double()) / float(height);
 
                 Ray ray = camera->generateRay(xs, ys);
-                imagePixel += calculateRadiance(ray, scene, 20);
+                imagePixel += calculateRadiance(ray, scene, 48);
             }
             imagePixel /= float(sampler);
 
