@@ -21,9 +21,9 @@ bool PolishedMetal::scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& wea
 	yRnd = random_double() * 2 - 1.0;
 	zRnd = random_double() * 2 - 1.0;
 
-	Vec3 random(xRnd, yRnd, zRnd);
-	Vec3 reflected = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
-	scattered = Ray(hit.positionHit, reflected + m_scatter_factor * random);
+	Vec3 randomPoints(xRnd, yRnd, zRnd);
+	Vec3 reflectionDirection = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
+	scattered = Ray(hit.positionHit, reflectionDirection + m_scatter_factor * randomPoints);
 	weakening = m_albedo;
 	if (m_scatter_factor != 0) return (dotProduct(scattered.getDirection(), hit.normalVector) > 0);
 	else return (dotProduct(scattered.getDirection(), hit.normalVector) < 1);

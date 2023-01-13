@@ -15,8 +15,9 @@ public:
 
 bool Mirror::scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening, Ray& scattered) const
 {
-	Vec3 reflected = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
-	scattered = Ray(hit.positionHit, reflected);
+	Vec3 reflectionDirection = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
+	scattered = Ray(hit.positionHit, reflectionDirection);
 	weakening = m_albedo;
-	return (dotProduct(scattered.getDirection(), hit.normalVector) > 0);
+	if (dotProduct(scattered.getDirection(), hit.normalVector) > 0) return true;
+	else return false;
 }
