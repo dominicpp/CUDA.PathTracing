@@ -36,19 +36,19 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
 int main()
 {
     float aspect_ratio = (16 / 8.5);
-    int width = 800; // 2k
+    int width = 600; // 2k
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 800; // rays per pixel
+    int sampler = 80; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/recursion_depth/res800samples800rec70.ppm");
+    std::ofstream out("doc/test5_polishedMetal_altered6_sf05.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* shapes[13];
     shapes[0] = new Sphere(Vec3(0, 0, -1.0), 0.5, new Diffuse(c_turquoise)); // center sphere
     shapes[1] = new Sphere(Vec3(0, 0, 1.5), 0.5, new Diffuse(c_purple)); // behind camera
-    shapes[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.0))); // glass sphere infront of camera
-    shapes[3] = new Sphere(Vec3(0.78, -0.15, -1), 0.3, new PolishedMetal(c_reflection, 1.0)); // bluish metal sphere
+    shapes[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // glass sphere infront of camera
+    shapes[3] = new Sphere(Vec3(0.78, -0.15, -1), 0.3, new PolishedMetal(c_reflection, 0)); //################################ bluish metal sphere
     shapes[4] = new Sphere(Vec3(-0.78, -0.15, -1), 0.3, new Diffuse(c_red)); // red diffuse sphere
     shapes[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(c_reflection)); // mirror sphere down right
     shapes[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(c_reflection)); // mirror sphere down left
@@ -77,7 +77,7 @@ int main()
                 float ys = float(y + random_double()) / float(height);
 
                 Ray ray = camera->generateRay(xs, ys);
-                imagePixel += calculateRadiance(ray, scene, 70);
+                imagePixel += calculateRadiance(ray, scene, 8);
             }
             imagePixel /= float(sampler);
 
