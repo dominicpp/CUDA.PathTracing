@@ -118,7 +118,13 @@ __host__ __device__ inline double random_double()
 }
 
 // Colors
-Vec3 c_red = Vec3(1, 0, 0);
+Vec3 c_red = Vec3(1.0, 0, 0);
+Vec3 c_aqua = Vec3(0.2, 0.8, 0.6);
+Vec3 c_yellow = Vec3(1.0, 1.0, 0);
+Vec3 c_gray = Vec3(0.85, 0.85, 0.85);
+Vec3 c_green = Vec3(0.2, 0.8, 0.2);
+Vec3 c_pink = Vec3(1.0, 0.45, 0.5);
 Vec3 c_turquoise = Vec3(0.2, 0.6, 0.8);
-Vec3 c_purple = Vec3(1, 0, 1);
-Vec3 c_reflection = Vec3(1, 1, 1);
+Vec3 c_purple = Vec3(1.0, 0, 1.0);
+Vec3 c_reflection = Vec3(1.0, 1.0, 1.0);
+Vec3 c_white = Vec3(1.0, 1.0, 1.0);
