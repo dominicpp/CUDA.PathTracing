@@ -32,8 +32,7 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit
 		float t1 = (-(b + sqrt(discriminant))) / (2 * a);
 		float t2 = (-(b - sqrt(discriminant))) / (2 * a);
 
-		if (t1 < t2) t = t1;
-		else t = t2; 
+		t1 < t2 ? t = t1 : t = t2;
 
 		if (tmin < t && t < tmax)
 		{

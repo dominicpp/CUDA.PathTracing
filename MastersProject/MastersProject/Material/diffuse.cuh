@@ -10,10 +10,13 @@ public:
 	Diffuse() = default;
 	Diffuse(const Vec3& albedo) : m_albedo(albedo) {}
 
-	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening, Ray& scattered) const override;
+	__host__ __device__ virtual Vec3 albedo() const override;
+	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scattered) const override;
 };
 
-bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening, Ray& scattered) const
+Vec3 Diffuse::albedo() const { return m_albedo; }
+
+bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scattered) const
 {
 	double sum, xRnd, yRnd, zRnd;
 	do {
@@ -23,8 +26,7 @@ bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Vec3& weakening
 		sum = pow(xRnd, 2) + pow(yRnd, 2) + pow(zRnd, 2);
 	} while (sum >= 1.0);
 
-	Vec3 target = hit.positionHit + normalize(hit.normalVector + Vec3(xRnd, yRnd, zRnd));
-	scattered = Ray(hit.positionHit, target - hit.positionHit);
-	weakening = m_albedo;
+	Vec3 reflectionDirection = hit.positionHit + normalize(hit.normalVector + Vec3(xRnd, yRnd, zRnd));
+	scattered = Ray(hit.positionHit, reflectionDirection - hit.positionHit);
 	return true;
 }

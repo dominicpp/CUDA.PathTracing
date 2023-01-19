@@ -128,3 +128,4 @@ Vec3 c_turquoise = Vec3(0.2, 0.6, 0.8);
 Vec3 c_purple = Vec3(1.0, 0, 1.0);
 Vec3 c_reflection = Vec3(1.0, 1.0, 1.0);
 Vec3 c_white = Vec3(1.0, 1.0, 1.0);
+Vec3 c_black = Vec3(0.0, 0.0, 0.0);

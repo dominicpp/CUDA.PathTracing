@@ -23,26 +23,27 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
     if (depth <= 0) { return Vec3(0.0, 0.0, 0.0); }
     if (scene->hitIntersect(ray, 0.001, std::numeric_limits<float>::max(), hit))
     {
-        // Spheres
+        // spheres
         Ray scattered;
-        Vec3 weakening;
-        if (/*depth <= 50 && */hit.material->scatteredRay(ray, hit, weakening, scattered))
-            return weakening * calculateRadiance(scattered, scene, depth - 1); // Tramberend/Diffuse Reflexion Video Minute 6:15
+        if (hit.material->scatteredRay(ray, hit, scattered))
+            // zu albedo: Tramberend/Diffuse Reflexion Video Minute 6:15
+            return (hit.material->albedo()) * calculateRadiance(scattered, scene, depth - 1); 
         else return Vec3(0.0, 0.0, 0.0);
     }
-    else 
-        return Vec3(1.0, 1.0, 1.0); // background
+    else
+        // background
+        return Vec3(1.0, 1.0, 1.0); 
 }
 
 int main()
 {
     float aspect_ratio = (16 / 8.5);
-    int width = 800; // 2k
+    int width = 800; // resolution
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 400; // rays per pixel
+    int sampler = 50; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/test7_after_polishedmetal_material_changes.ppm");
+    std::ofstream out("doc/test0_after_refactoring.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* shapes[13];
