@@ -16,17 +16,21 @@ public:
 
 bool Group::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const
 {
-	RecordHit temp_hit;
-	bool hits = false;
-	
-	for (int i = 0; i < m_size; ++i)
-	{
-		if (m_shapes[i]->hitIntersect(ray, tmin, tmax, temp_hit) && (temp_hit.rayParameter < tmax))
-		{
-			hits = true;
-			tmax = temp_hit.rayParameter;
-			hit = temp_hit;
-		}
-	}
-	return hits;
+    RecordHit tempHit;
+    int closestHit = m_size;
+
+    for (int i = 0; i < m_size; ++i)
+    {
+        if (m_shapes[i]->hitIntersect(ray, tmin, tmax, tempHit) && tempHit.rayParameter < tmax)
+        {
+            tmax = tempHit.rayParameter;
+            closestHit = i;
+        }
+    }
+
+    if (closestHit != m_size) {
+        hit = tempHit;
+        return true;
+    }
+    return false;
 }
