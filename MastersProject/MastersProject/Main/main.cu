@@ -16,7 +16,8 @@
 #include "../Material/mirror.cuh"
 
 // Recursion -> Ray bouncing around / Path Tracing
-// try to change recursion to iterative for better performance?
+// try to change recursion to iterative for better performance? Is that even possible?
+// maybe something with curandState* state?? 
 __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth)
 {
 	RecordHit hit;
@@ -26,9 +27,10 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
 	{
 		// spheres
 		Ray scattered;
+		Vec3 albedo = hit.material->albedo();
 		if (hit.material->scatteredRay(ray, hit, scattered))
 			// zu albedo: Tramberend/Diffuse Reflexion Video Minute 6:15
-			return (hit.material->albedo()) * calculateRadiance(scattered, scene, depth - 1);
+			return albedo * calculateRadiance(scattered, scene, depth - 1);
 		else return Vec3(0.0, 0.0, 0.0);
 	}
 	else return Vec3(1.0, 1.0, 1.0); // background
@@ -53,7 +55,7 @@ __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* sc
 					float xs = float(x + ((xi + random_double())) / sampler) / float(width);
 
 					Ray ray = camera->generateRay(xs, ys);
-					imagePixel += calculateRadiance(ray, scene, 22);
+					imagePixel += calculateRadiance(ray, scene, 18);
 				}
 			}
 			imagePixel /= float(sampler * sampler);
@@ -71,14 +73,14 @@ int main()
 	float aspect_ratio = (16 / 8.5);
 	int width = 800; // resolution
 	int height = static_cast<int>(width / aspect_ratio);
-	int sampler = 25; // rays per pixel
+	int sampler = 10; // rays per pixel
 	float gamma = 2.2f;
 
 	float viewport_height = 2.0;
 	float viewport_width = aspect_ratio * viewport_height;
 	Camera* camera = new Camera(viewport_width, viewport_height);
 
-	std::ofstream out("doc/super_sampling/03_stratified_sampling_625rays_22rec.ppm");
+	std::ofstream out("doc/02test.ppm");
 	out << "P3\n" << width << " " << height << "\n255\n";
 
 	Hit* shapes[13];
