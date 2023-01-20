@@ -6,7 +6,7 @@ class PolishedMetal : public Material
 {
 	Vec3 m_albedo;
 	float m_scatter_factor;
-	double pi = 3.14159265358979323846;
+	double m_pi = 3.14159265358979323846;
 
 public:
 	PolishedMetal() = default;
@@ -29,7 +29,7 @@ bool PolishedMetal::scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scat
 	Vec3 reflectionDirection = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
 	if (m_scatter_factor != 0.0)
 		scattered = Ray(hit.positionHit, reflectionDirection + m_scatter_factor * randomPoints);
-	if (dotProduct(scattered.getDirection(), hit.normalVector) > 0 && dotProduct(scattered.getDirection(), hit.normalVector) < pi 
+	if (dotProduct(scattered.getDirection(), hit.normalVector) > 0 && dotProduct(scattered.getDirection(), hit.normalVector) < m_pi 
 		|| dotProduct(scattered.getDirection(), hit.normalVector) < 1) return true;
 	return false;
 }
