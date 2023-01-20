@@ -16,6 +16,7 @@
 #include "../Material/mirror.cuh"
 
 // Recursion -> Ray bouncing around / Path Tracing
+// try to change recursion to iterative for better performance?
 __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth)
 {
     RecordHit hit;
@@ -33,12 +34,13 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
     else return Vec3(1.0, 1.0, 1.0); // background
 }
 
+// change to __global__ later
 __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* scene, std::ofstream& out, int sampler, float gamma)
 {
-    // auto a = std::chrono::high_resolution_clock::now();
     for (int y = height - 1; y >= 00; --y)
     {
-        // std::cerr << "\r##### Remaining lines scanning: " << y << ' ' << std::flush;
+        // not working.. why?
+        /*std::cerr << "\r##### Remaining lines scanning: " << y << ' ' << std::flush;*/
         for (int x = 0; x < width; ++x)
         {
             Vec3 imagePixel(0.0, 0.0, 0.0);
@@ -48,7 +50,7 @@ __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* sc
                 float ys = float(y + random_double()) / float(height);
 
                 Ray ray = camera->generateRay(xs, ys);
-                imagePixel += calculateRadiance(ray, scene, 15);
+                imagePixel += calculateRadiance(ray, scene, 10);
             }
             imagePixel /= float(sampler);
 
@@ -58,8 +60,6 @@ __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* sc
             out << r << " " << g << " " << b << "\n";
         }
     }
-    // auto b = std::chrono::high_resolution_clock::now();
-    // std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
 }
 
 int main()
@@ -67,10 +67,14 @@ int main()
     float aspect_ratio = (16 / 8.5);
     int width = 800; // resolution
     int height = static_cast<int>(width / aspect_ratio);
-    int sampler = 100; // rays per pixel
+    int sampler = 30; // rays per pixel
     float gamma = 2.2f;
 
-    std::ofstream out("doc/test12_after_refactoring.ppm");
+    float viewport_height = 2.0;
+    float viewport_width = aspect_ratio * viewport_height;
+    Camera* camera = new Camera(viewport_width, viewport_height);
+
+    std::ofstream out("doc/test14.ppm");
     out << "P3\n" << width << " " << height << "\n255\n";
 
     Hit* shapes[13];
@@ -87,46 +91,10 @@ int main()
     shapes[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(c_purple)); // tiny purple mirror sphere 
     shapes[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(c_yellow)); // yellow mirror sphere
     shapes[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(c_aqua)); // aqua sphere on blue sphere
-
-    // shapes[13] = new Plane(Vec3(1.0, 1.8, -0.5), Vec3(1.0, -1.0, -0.8), new Diffuse(c_red)); // actual plane
-    // shapes[13] = new Cylinder(Vec3(0, -1.0, -1.0), 0.6, 11, new Diffuse(c_red));
-    // shapes[13] = new Cylinder(Vec3(0.0, -1.0, -2.0), 0.5, 11, new Diffuse(c_red));
-
     Hit* scene = new Group(shapes, 13);
 
-    float viewport_height = 2.0;
-    float viewport_width = aspect_ratio * viewport_height;
-    Camera* camera = new Camera(viewport_width, viewport_height);
-
+    auto a = std::chrono::high_resolution_clock::now();
     raytrace(width, height, camera, scene, out, sampler, gamma);
-
-    //auto a = std::chrono::high_resolution_clock::now();
-    //for (int y = height - 1; y >= 00; --y)
-    //{
-    //    std::cerr << "\r##### Remaining lines scanning: " << y << ' ' << std::flush;
-    //    for (int x = 0; x < width; ++x)
-    //    {
-    //        Vec3 imagePixel(0.0, 0.0, 0.0);
-    //        for (int n = 0; n < sampler; ++n)
-    //        {
-    //            float xs = float(x + random_double()) / float(width);
-    //            float ys = float(y + random_double()) / float(height);
-
-    //            Ray ray = camera->generateRay(xs, ys);
-    //            imagePixel += calculateRadiance(ray, scene, 13);
-    //        }
-    //        imagePixel /= float(sampler);
-
-    //        int r = int(255 * (pow(imagePixel[0], 1 / gamma)));
-    //        int g = int(255 * (pow(imagePixel[1], 1 / gamma)));
-    //        int b = int(255 * (pow(imagePixel[2], 1 / gamma)));
-    //        out << r << " " << g << " " << b << "\n";
-    //    }    
-    //}
-    //auto b = std::chrono::high_resolution_clock::now();
-
-
-
-    // std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
-    // std::cerr << "\nDone.\n";
+    auto b = std::chrono::high_resolution_clock::now();
+    std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
 }
