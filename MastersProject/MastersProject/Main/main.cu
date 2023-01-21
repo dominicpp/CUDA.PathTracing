@@ -41,7 +41,7 @@ __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* sc
 {
 	for (int y = height; y != 0; --y)
 	{
-		// not working.. why?
+		// not working.. why??
 		// std::cerr << "\r##### Remaining lines scanning: " << y << ' ' << std::flush;
 		for (int x = 0; x != width; ++x)
 		{
