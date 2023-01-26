@@ -30,6 +30,7 @@ __host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth
 		Vec3 albedo = hit.material->albedo();
 		if (hit.material->scatteredRay(ray, hit, scattered))
 			// zu albedo: Tramberend/Diffuse Reflexion Video Minute 6:15
+			// Das was hier rauskommt ist die Intensität / Energie, die reflektiert wird.
 			return albedo * calculateRadiance(scattered, scene, depth - 1);
 		else return Vec3(0.0, 0.0, 0.0);
 	}
@@ -55,7 +56,7 @@ __host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* sc
 					float xs = float(x + ((xi + random_double())) / sampler) / float(width);
 
 					Ray ray = camera->generateRay(xs, ys);
-					imagePixel += calculateRadiance(ray, scene, 18);
+					imagePixel += calculateRadiance(ray, scene, 14);
 				}
 			}
 			imagePixel /= float(sampler * sampler);
@@ -73,14 +74,14 @@ int main()
 	float aspect_ratio = (16 / 8.5);
 	int width = 800; // resolution
 	int height = static_cast<int>(width / aspect_ratio);
-	int sampler = 10; // rays per pixel
+	int sampler = 3; // rays per pixel
 	float gamma = 2.2f;
 
 	float viewport_height = 2.0;
 	float viewport_width = aspect_ratio * viewport_height;
 	Camera* camera = new Camera(viewport_width, viewport_height);
 
-	std::ofstream out("doc/02test.ppm");
+	std::ofstream out("doc/test_albedo.ppm");
 	out << "P3\n" << width << " " << height << "\n255\n";
 
 	Hit* shapes[13];
