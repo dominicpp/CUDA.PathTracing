@@ -1,5 +1,6 @@
 ﻿#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "curand_kernel.h"
 #include <fstream>
 #include <iostream>
 #include <chrono>
@@ -81,7 +82,7 @@ int main()
 	float viewport_width = aspect_ratio * viewport_height;
 	Camera* camera = new Camera(viewport_width, viewport_height);
 
-	std::ofstream out("doc/test_albedo.ppm");
+	std::ofstream out("doc/test_albedo1.ppm");
 	out << "P3\n" << width << " " << height << "\n255\n";
 
 	Hit* shapes[13];
