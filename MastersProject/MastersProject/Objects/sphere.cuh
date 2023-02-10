@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../Hit/hit.cuh"
-#include "../Ray/ray.cuh"
+#include "../Hit/shape.cuh"
 
 class Material;
 
-class Sphere : public Hit {
+class Sphere : public Shape
+{
 	Vec3 m_position;
 	float m_radius;
 	Material* m_material;
@@ -14,7 +14,7 @@ public:
 	Sphere() = default;
 	Sphere(Vec3 position, float radius, Material* material) : m_position(position), m_radius(radius), m_material(material) {};
 
-	__host__ __device__ virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const override;
+	virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const override;
 };
 
 bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const
@@ -43,4 +43,5 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit
 			return true;
 		}
 	}
+	return false;
 }

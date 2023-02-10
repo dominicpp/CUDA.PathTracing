@@ -1,15 +1,15 @@
 #pragma once
 
-#include "../Hit/hit.cuh"
+#include "../Hit/shape.cuh"
 
 struct RecordHit;
 
 class Material
 {
 public:
-	Material() = default;
+    Material() = default;
 
-	__host__ __device__ virtual Vec3 albedo() const = 0;
+    virtual Vec3 albedo() const = 0;
 
-	__host__ __device__ virtual bool scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scattered) const = 0;
+    virtual bool scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scattered) const = 0;
 };

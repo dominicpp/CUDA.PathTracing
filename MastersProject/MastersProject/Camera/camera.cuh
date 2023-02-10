@@ -7,11 +7,11 @@ class Camera
     Vec3 m_horizontal, m_vertical, m_origin, m_cameraPos;
 
 public:
-	Camera() = default;
-    Camera(float width, float height)
+    Camera() = default;
+    Camera(float positionX, float positionY)
     {
-        m_horizontal = Vec3(width, 0.0, 0.0);
-        m_vertical = Vec3(0.0, height, 0.0);
+        m_horizontal = Vec3(positionX, 0.0, 0.0);
+        m_vertical = Vec3(0.0, positionY, 0.0);
         m_origin = Vec3(0.0, 0.0, 0.0);
         m_cameraPos = Vec3(0.0, 0.2, 0.8);
     }
