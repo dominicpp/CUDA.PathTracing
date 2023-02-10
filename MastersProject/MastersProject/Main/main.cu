@@ -1,108 +1,191 @@
 ﻿#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "curand_kernel.h"
+#include <curand_kernel.h>
+
 #include <fstream>
 #include <iostream>
 #include <chrono>
 
+#include "../Utils/vec3.cuh"
 #include "../Ray/ray.cuh"
-#include "../Camera/camera.cuh"
-#include "../Hit/hit.cuh"
 #include "../Hit/group.cuh"
+#include "../Camera/camera.cuh"
+#include "../Material/material.cuh"
+#include "../Material/diffuseMaterial.cuh"
+#include "../Material/mirrorMaterial.cuh"
+#include "../Material/polishedMetalMaterial.cuh"
 #include "../Objects/sphere.cuh"
-// #include "../Objects/cylinder.cuh"
-// #include "../Objects/plane.cuh"
-#include "../Material/diffuse.cuh"
-#include "../Material/polishedmetal.cuh"
-#include "../Material/mirror.cuh"
 
-// Recursion -> Ray bouncing around / Path Tracing
-// try to change recursion to iterative for better performance? Is that even possible?
-// maybe something with curandState* state?? 
-__host__ __device__ Vec3 calculateRadiance(const Ray& ray, Hit* scene, int depth)
+
+__device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, curandStateXORWOW* state)
 {
-	RecordHit hit;
+    Ray tempRay = ray;
+    Vec3 attenuation = Vec3(1.0f, 1.0f, 1.0f);
+    int bounces = 0;
 
-	if (depth <= 0) { return Vec3(0.0, 0.0, 0.0); }
-	if (scene->hitIntersect(ray, 0.001, std::numeric_limits<float>::max(), hit))
-	{
-		// spheres
-		Ray scattered;
-		Vec3 albedo = hit.material->albedo();
-		if (hit.material->scatteredRay(ray, hit, scattered))
-			// zu albedo: Tramberend/Diffuse Reflexion Video Minute 6:15
-			// Das was hier rauskommt ist die Intensität / Energie, die reflektiert wird.
-			return albedo * calculateRadiance(scattered, scene, depth - 1);
-		else return Vec3(0.0, 0.0, 0.0);
-	}
-	else return Vec3(1.0, 1.0, 1.0); // background
+    while (bounces < depth)
+    {
+        RecordHit hit;
+        if ((*scene)->hitIntersect(tempRay, 0.001f, FLT_MAX, hit))
+        {
+            Ray scattered;
+            Vec3 albedo = hit.material->albedo();
+            if (hit.material->scatteredRay(tempRay, hit, scattered, state))
+            {
+                attenuation = attenuation * albedo;
+                tempRay = scattered;
+                bounces++;
+                continue;
+            }
+            else return Vec3(0.0f, 0.0f, 0.0f);
+        }
+        // background
+        return attenuation;
+    }
+    return Vec3(0.0f, 0.0f, 0.0f);
 }
 
-// change to __global__ later
-__host__ __device__ void raytrace(int width, int height, Camera* camera, Hit* scene, std::ofstream& out, int sampler, float gamma)
+//#############################################
+__global__ void render_init(int width, int height, curandStateXORWOW* state)
 {
-	for (int y = height; y != 0; --y)
-	{
-		// not working.. why??
-		// std::cerr << "\r##### Remaining lines scanning: " << y << ' ' << std::flush;
-		for (int x = 0; x != width; ++x)
-		{
-			Vec3 imagePixel(0.0, 0.0, 0.0);
-			// Switched from "Random Sampling" to "Stratified Sampling" for better distribution of samples
-			for (int yi = 0; yi < sampler; ++yi)
-			{
-				for (int xi = 0; xi < sampler; ++xi)
-				{
-					float ys = float(y + ((yi + random_double())) / sampler) / float(height);
-					float xs = float(x + ((xi + random_double())) / sampler) / float(width);
+    int tidx = threadIdx.x;
+    int tidy = threadIdx.y;
+    int offsetx = blockIdx.x * blockDim.x;
+    int offsety = blockIdx.y * blockDim.y;
+    int gidx = tidx + offsetx;
+    int gidy = tidy + offsety;
+    if ((gidx >= width) || (gidy >= height)) return;
+    int pixelIndex = gidy * width + gidx;
+    curand_init(2023, pixelIndex, 0, &state[pixelIndex]);
+}
+//#############################################
 
-					Ray ray = camera->generateRay(xs, ys);
-					imagePixel += calculateRadiance(ray, scene, 14);
-				}
-			}
-			imagePixel /= float(sampler * sampler);
+__global__ void raytrace(Vec3* buffer, int width, int height, Camera** camera, Shape** scene, curandStateXORWOW* state, int sample, float gamma)
+{
+    int tidx = threadIdx.x;
+    int tidy = threadIdx.y;
+    int offsetx = blockIdx.x * blockDim.x;
+    int offsety = blockIdx.y * blockDim.y;
+    int gidx = tidx + offsetx;
+    int gidy = tidy + offsety;
+    if ((gidx >= width) || (gidy >= height)) return;
+    int pixelIndex = gidy * width + gidx;
 
-			int r = int(255 * (pow(imagePixel[0], 1 / gamma)));
-			int g = int(255 * (pow(imagePixel[1], 1 / gamma)));
-			int b = int(255 * (pow(imagePixel[2], 1 / gamma)));
-			out << r << " " << g << " " << b << "\n";
-		}
-	}
+    curandStateXORWOW tempState = state[pixelIndex];
+    Vec3 color(0, 0, 0);
+    for (int x = 0; x < sample; ++x)
+    {
+        for (int y = 0; y < sample; ++y)
+        {
+            float rx = curand_uniform(&tempState);
+            float ry = curand_uniform(&tempState);
+            float sx = (gidx + (x + rx) / sample) / float(width);
+            float sy = (gidy + (y + ry) / sample) / float(height);
+            Ray ray = (*camera)->generateRay(sx, sy);
+            color = color + calculateRadiance(ray, scene, 15, &tempState);
+        }
+    }
+
+    Vec3 setPixel = color;
+    setPixel = color / float(sample * sample);
+    setPixel[0] = pow(setPixel[0], 1 / gamma);
+    setPixel[1] = pow(setPixel[1], 1 / gamma);
+    setPixel[2] = pow(setPixel[2], 1 / gamma);
+    buffer[pixelIndex] = setPixel;
+    state[pixelIndex] = tempState;
+}
+
+__global__ void create_world(Shape** d_list, Shape** d_world, Camera** d_camera)
+{
+    d_list[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
+    d_list[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
+    d_list[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // pink diffuse sphere infront of center sphere
+    d_list[3] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 0.23)); // polished metal sphere right from center sphere
+    d_list[4] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(Vec3(1.0, 0.0, 0.0))); // red diffuse sphere
+    d_list[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down right
+    d_list[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down left
+    d_list[7] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.2, 0.8, 0.2))); // green sphere up right
+    d_list[8] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 1.0)); // polished metal sphere up left
+    d_list[9] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
+    d_list[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
+    d_list[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
+    d_list[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
+
+    *d_world = new Group(d_list, 13);
+    *d_camera = new Camera(4.0f, 2.0f);
 }
 
 int main()
 {
-	float aspect_ratio = (16 / 8.5);
-	int width = 800; // resolution
-	int height = static_cast<int>(width / aspect_ratio);
-	int sampler = 3; // rays per pixel
-	float gamma = 2.2f;
+    // resolution in x & y dimension / number of threads for each dimension
+    int nx = 1200;
+    int ny = 600;
+    // number of (thread-)blocks in x & y dimension
+    int tx = 32;
+    int ty = 32;
+    int sample = 10; // rays per pixel -> in fact 32x32 with Stratified Sampling
+    float gamma = 2.2f; // corrected gamma value
 
-	float viewport_height = 2.0;
-	float viewport_width = aspect_ratio * viewport_height;
-	Camera* camera = new Camera(viewport_width, viewport_height);
+    int allPixels = nx * ny;
+    float bufferSize = allPixels * sizeof(Vec3);
 
-	std::ofstream out("doc/test_albedo1.ppm");
-	out << "P3\n" << width << " " << height << "\n255\n";
+    std::ofstream out("doc/test_albedo2.ppm");
+    std::cerr << "Rendering a " << nx << "x" << ny << " image with " << sample * sample << " samples per pixel ";
+    std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
-	Hit* shapes[13];
-	shapes[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(c_turquoise)); // center diffuse sphere
-	shapes[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(c_purple)); // behind camera diffuse sphere
-	shapes[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(c_pink)); // pink diffuse sphere infront of center sphere
-	shapes[3] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(c_white, 0.23)); // polished metal sphere right from center sphere
-	shapes[4] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(c_red)); // red diffuse sphere
-	shapes[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(c_reflection)); // mirror sphere down right
-	shapes[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(c_reflection)); // mirror sphere down left
-	shapes[7] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(c_green)); // green sphere up right
-	shapes[8] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(c_white, 1.0)); // polished metal sphere up left
-	shapes[9] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(c_gray)); // plane sphere
-	shapes[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(c_purple)); // tiny purple mirror sphere 
-	shapes[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(c_yellow)); // yellow mirror sphere
-	shapes[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(c_aqua)); // aqua sphere on blue sphere
-	Hit* scene = new Group(shapes, 13);
+    // ########## CUDA MEMORY ALLOCATION
+    curandStateXORWOW* d_state; // Random Number Generator
+    cudaMallocManaged((void**)&d_state, allPixels * sizeof(curandStateXORWOW));
+    Vec3* d_buffer;
+    cudaMallocManaged((void**)&d_buffer, bufferSize);
+    Shape** d_objects;
+    cudaMallocManaged((void**)&d_objects, 12 * sizeof(Shape*));
+    Shape** d_scene;
+    cudaMallocManaged((void**)&d_scene, sizeof(Shape*));
+    Camera** d_camera;
+    cudaMallocManaged((void**)&d_camera, sizeof(Camera*));
+    // ##########
 
-	auto a = std::chrono::high_resolution_clock::now();
-	raytrace(width, height, camera, scene, out, sampler, gamma);
-	auto b = std::chrono::high_resolution_clock::now();
-	std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
+    dim3 grid(nx / tx + 1, ny / ty + 1, 1);
+    dim3 block(tx, ty, 1);
+
+    auto a = std::chrono::high_resolution_clock::now();
+    // KERNEL 1
+    create_world << <1, 1 >> > (d_objects, d_scene, d_camera);
+    cudaGetLastError();
+    cudaDeviceSynchronize();
+    //#############################################
+    // KERNEL 2
+    render_init << <grid, block >> > (nx, ny, d_state);
+    cudaGetLastError();
+    cudaDeviceSynchronize();
+    //#############################################
+    // KERNEL 3
+    raytrace << <grid, block >> > (d_buffer, nx, ny, d_camera, d_scene, d_state, sample, gamma);
+    cudaGetLastError();
+    cudaDeviceSynchronize();
+    auto b = std::chrono::high_resolution_clock::now();
+    std::cerr << "\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
+
+    out << "P3\n" << nx << " " << ny << "\n255\n";
+    for (int j = ny - 1; j >= 0; j--)
+    {
+        for (int i = 0; i < nx; i++)
+        {
+            size_t pixel_index = j * nx + i;
+            int ir = int(255.99 * d_buffer[pixel_index][0]);
+            int ig = int(255.99 * d_buffer[pixel_index][1]);
+            int ib = int(255.99 * d_buffer[pixel_index][2]);
+            out << ir << " " << ig << " " << ib << "\n";
+        }
+    }
+
+    // free memory on device
+    cudaFree(d_camera);
+    cudaFree(d_scene);
+    cudaFree(d_objects);
+    cudaFree(d_state);
+    cudaFree(d_buffer);
+    // remove all device allocations
+    cudaDeviceReset();
 }
