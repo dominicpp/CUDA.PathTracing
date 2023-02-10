@@ -95,7 +95,7 @@ __global__ void raytrace(Vec3* buffer, int width, int height, Camera** camera, S
     state[pixelIndex] = tempState;
 }
 
-__global__ void create_world(Shape** objects, Shape** scene, Camera** d_camera)
+__global__ void createObjects(Shape** objects, Shape** scene)
 {
     objects[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
     objects[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
@@ -110,8 +110,11 @@ __global__ void create_world(Shape** objects, Shape** scene, Camera** d_camera)
     objects[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
     objects[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
     objects[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
-
     *scene = new Group(objects, 13);
+}
+
+__global__ void createCamera(Camera** d_camera)
+{
     *d_camera = new Camera(4.0f, 2.0f);
 }
 
@@ -129,7 +132,7 @@ int main()
     int allPixels = nx * ny;
     float bufferSize = allPixels * sizeof(Vec3);
 
-    std::ofstream out("doc/cuda_test.ppm");
+    std::ofstream out("doc/cuda_test00.ppm");
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << sample * sample << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
@@ -151,16 +154,20 @@ int main()
 
     auto a = std::chrono::high_resolution_clock::now();
     // KERNEL 1
-    create_world << <1, 1 >> > (d_objects, d_scene, d_camera);
+    createObjects << <1, 1 >> > (d_objects, d_scene);
     cudaGetLastError();
     cudaDeviceSynchronize();
-    //#############################################
     // KERNEL 2
-    render_init << <grid, block >> > (nx, ny, d_state);
+    createCamera << <1, 1 >> > (d_camera);
     cudaGetLastError();
     cudaDeviceSynchronize();
     //#############################################
     // KERNEL 3
+    render_init << <grid, block >> > (nx, ny, d_state);
+    cudaGetLastError();
+    cudaDeviceSynchronize();
+    //#############################################
+    // KERNEL 4
     raytrace << <grid, block >> > (d_buffer, nx, ny, d_camera, d_scene, d_state, sample, gamma);
     cudaGetLastError();
     cudaDeviceSynchronize();
