@@ -173,10 +173,10 @@ int main()
         for (int x = 0; x != nx; ++x)
         {
             int pixelIndex = y * nx + x;
-            int ir = int(255.99 * d_buffer[pixelIndex][0]);
-            int ig = int(255.99 * d_buffer[pixelIndex][1]);
-            int ib = int(255.99 * d_buffer[pixelIndex][2]);
-            out << ir << " " << ig << " " << ib << "\n";
+            int r = int(255.99 * d_buffer[pixelIndex][0]);
+            int g = int(255.99 * d_buffer[pixelIndex][1]);
+            int b = int(255.99 * d_buffer[pixelIndex][2]);
+            out << r << " " << g << " " << b << "\n";
         }
     }
 
