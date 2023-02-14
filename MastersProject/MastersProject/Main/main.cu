@@ -45,27 +45,29 @@ __device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, cura
     return Vec3(0.0f, 0.0f, 0.0f);
 }
 
+__device__ void calculatePixelId(int width, int& tidx, int& tidy, int& offsetx, int& offsety, int& gidx, int& gidy) 
+{
+    tidx = threadIdx.x;
+    tidy = threadIdx.y;
+    offsetx = blockIdx.x * blockDim.x;
+    offsety = blockIdx.y * blockDim.y;
+    gidx = tidx + offsetx;
+    gidy = tidy + offsety;
+}
+
 //##### Setup (R)andom (N)umber (G)enerator #####
 __global__ void setupRNG(int width, int height, uint64_t seed, curandStateXORWOW* state)
 {
-    int tidx = threadIdx.x;
-    int tidy = threadIdx.y;
-    int offsetx = blockIdx.x * blockDim.x;
-    int offsety = blockIdx.y * blockDim.y;
-    int gidx = tidx + offsetx;
-    int gidy = tidy + offsety;
+    int tidx, tidy, offsetx, offsety, gidx, gidy;
+    calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
     int pixelId = gidy * width + gidx;
     curand_init(seed, pixelId, 0, &state[pixelId]);
 }
 
 __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera, Shape** scene, curandStateXORWOW* state, int sample, float gamma)
 {
-    int tidx = threadIdx.x;
-    int tidy = threadIdx.y;
-    int offsetx = blockIdx.x * blockDim.x;
-    int offsety = blockIdx.y * blockDim.y;
-    int gidx = tidx + offsetx;
-    int gidy = tidy + offsety;
+    int tidx, tidy, offsetx, offsety, gidx, gidy;
+    calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
     int pixelId = gidy * width + gidx;
     curandStateXORWOW tempState = state[pixelId];
     
