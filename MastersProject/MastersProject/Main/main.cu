@@ -125,7 +125,7 @@ int main()
     int tx = 8;
     int ty = 8;
 
-    int sample = 10; // rays per pixel -> in fact 32x32 with Stratified Sampling
+    int sample = 32; // rays per pixel -> in fact 32x32 with Stratified Sampling
     float gamma = 2.2f;
     int allPixels = nx * ny;
 
