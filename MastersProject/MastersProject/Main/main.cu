@@ -19,20 +19,21 @@
 
 __global__ void createObjects(Shape** objects, Shape** scene)
 {
-    objects[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
-    objects[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
-    objects[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // pink diffuse sphere infront of center sphere
-    objects[3] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 0.33)); // polished metal sphere right from center sphere
-    objects[4] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(Vec3(1.0, 0.0, 0.0))); // red diffuse sphere
-    objects[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down right
-    objects[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down left
-    objects[7] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.2, 0.8, 0.2))); // green sphere up right
-    objects[8] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 1.0)); // polished metal sphere up left
-    objects[9] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
-    objects[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
-    objects[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
-    objects[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
-    *scene = new Group(objects, 13);
+    int count = 0;
+    objects[count++] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
+    objects[count++] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
+    objects[count++] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // pink diffuse sphere infront of center sphere
+    objects[count++] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 0.33)); // polished metal sphere right from center sphere
+    objects[count++] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(Vec3(1.0, 0.0, 0.0))); // red diffuse sphere
+    objects[count++] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down right
+    objects[count++] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down left
+    objects[count++] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.2, 0.8, 0.2))); // green sphere up right
+    objects[count++] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 1.0)); // polished metal sphere up left
+    objects[count++] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
+    objects[count++] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
+    objects[count++] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
+    objects[count++] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
+    *scene = new Group(objects, count);
 }
 
 __global__ void createCamera(Camera** d_camera) { *d_camera = new Camera(4.0f, 2.0f); }
@@ -115,28 +116,26 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
     state[pixelId] = tempState;
 }
 
-
-
 int main()
 {
-    // resolution in x & y dimension / number of threads for each dimension
+    // resolution
     int nx = 1920;
     int ny = 960;
-    // number of (thread-)blocks in x & y dimension
-    int tx = 32;
-    int ty = 32;
-    int sample = 10; // rays per pixel -> in fact 32x32 with Stratified Sampling
-    float gamma = 2.2f; // corrected gamma value
+    // number of threads per block in x and y dimension
+    int tx = 8;
+    int ty = 8;
 
+    int sample = 10; // rays per pixel -> in fact 32x32 with Stratified Sampling
+    float gamma = 2.2f;
     int allPixels = nx * ny;
 
-    std::ofstream out("doc/cuda_test02.ppm");
+    std::ofstream out("doc/cuda_01.ppm");
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << sample * sample << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
     //##### CUDA MEMORY ALLOCATION #####
     curandStateXORWOW* d_state; // Random Number Generator
-    cudaMallocManaged((void**)&d_state, allPixels* sizeof(curandStateXORWOW));
+    cudaMallocManaged((void**)&d_state, allPixels * sizeof(curandStateXORWOW));
     Vec3* d_buffer;
     cudaMallocManaged((void**)&d_buffer, allPixels * sizeof(Vec3));
     Shape** d_objects;
@@ -146,34 +145,39 @@ int main()
     Camera** d_camera;
     cudaMallocManaged((void**)&d_camera, sizeof(Camera*));
 
- 
-    // how many threads per block in x and y dimension
-    // 1024 threads per block is max!
-    dim3 block(18, 6, 1);
-    // how many thread blocks in x and y dimension
-    dim3 grid(107, 160, 1);
+    //##### CUDA KERNEL ARGS #####
+    dim3 block(tx, ty, 1); //how many threads per block in x and y dimension -> 32x32 = 1024 threads
+    dim3 grid(nx / block.x, ny / block.y, 1); //how many thread blocks in x and y dimension
 
     auto start = std::chrono::high_resolution_clock::now();
     //##### KERNEL 1 #####
-    createObjects << <1, 1, 0, 0 >> > (d_objects, d_scene);
-    cudaGetLastError();
-    cudaDeviceSynchronize();
+    {
+        createObjects << <1, 1, 0, 0 >> > (d_objects, d_scene);
+		cudaGetLastError();
+		cudaDeviceSynchronize();
+    }
 
     //##### KERNEL 2 #####
-    createCamera << <1, 1, 0, 0 >> > (d_camera);
-    cudaGetLastError();
-    cudaDeviceSynchronize();
+    {
+        createCamera << <1, 1, 0, 0 >> > (d_camera);
+        cudaGetLastError();
+        cudaDeviceSynchronize();
+    }
     
     //##### KERNEL 3 #####
-    uint64_t d_seed = 2023;
-    setupRNG << <grid, block, 0, 0 >> > (nx, ny, d_seed, d_state);
-    cudaGetLastError();
-    cudaDeviceSynchronize();
+    {
+        uint64_t d_seed = 2023;
+        setupRNG << <grid, block, 0, 0 >> > (nx, ny, d_seed, d_state);
+        cudaGetLastError();
+        cudaDeviceSynchronize();
+    }
 
     //##### KERNEL 4 #####
-    raytracing << <grid, block, 0, 0 >> > (d_buffer, nx, ny, d_camera, d_scene, d_state, sample, gamma);
-    cudaGetLastError();
-    cudaDeviceSynchronize();
+    {
+        raytracing << <grid, block, 0, 0 >> > (d_buffer, nx, ny, d_camera, d_scene, d_state, sample, gamma);
+        cudaGetLastError();
+        cudaDeviceSynchronize();
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::cerr << "\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds\n";
