@@ -122,8 +122,8 @@ int main()
     int nx = 1920;
     int ny = 960;
     // number of threads per block in x and y dimension
-    int tx = 8;
-    int ty = 8;
+    int tx = 1;
+    int ty = 1;
 
     int sample = 32; // rays per pixel -> in fact 32x32 with Stratified Sampling
     float gamma = 2.2f;
