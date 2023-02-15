@@ -32,7 +32,7 @@ Vec3 calculateRadiance(const Ray& ray, Shape* scene, int depth)
 
 void raytrace(int width, int height, Camera* camera, Shape* scene, std::ofstream& out, int sampler, float gamma)
 {
-	for (int y = height; y != 0; --y)
+	for (int y = height-1; y != 0; --y)
 	{
 		for (int x = 0; x != width; ++x)
 		{
@@ -45,7 +45,7 @@ void raytrace(int width, int height, Camera* camera, Shape* scene, std::ofstream
 					float xs = float(x + ((xi + random_double())) / sampler) / float(width);
 
 					Ray ray = camera->generateRay(xs, ys);
-					imagePixel = imagePixel + calculateRadiance(ray, scene, 18);
+					imagePixel = imagePixel + calculateRadiance(ray, scene, 15);
 				}
 			}
 			imagePixel = imagePixel / float(sampler * sampler);
@@ -61,18 +61,19 @@ void raytrace(int width, int height, Camera* camera, Shape* scene, std::ofstream
 int main()
 {
 	float aspect_ratio = (16 / 8.5);
-	int width = 1200; // resolution
-	int height = static_cast<int>(width / aspect_ratio);
-	int sampler = 10; // rays per pixel
+	int width = 1920; // resolution
+	/*int height = static_cast<int>(width / aspect_ratio);*/
+	int height = 960;
+	int sampler = 32; // rays per pixel
 	float gamma = 2.2f;
 
-	float viewport_height = 2.0;
-	float viewport_width = aspect_ratio * viewport_height;
-	Camera* camera = new Camera(viewport_width, viewport_height);
+	//float viewport_height = 2.0;
+	//float viewport_width = aspect_ratio * viewport_height;
+	Camera* camera = new Camera(4.0f, 2.0f);
 
-	std::ofstream out("doc/cpptest.ppm");
+	std::ofstream out("doc/cpp_01.ppm");
 	out << "P3\n" << width << " " << height << "\n255\n";
-
+	auto a = std::chrono::high_resolution_clock::now();
 	Shape* shapes[13];
 	shapes[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
 	shapes[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
@@ -89,7 +90,7 @@ int main()
 	shapes[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
 	Shape* scene = new Group(shapes, 13);
 
-	auto a = std::chrono::high_resolution_clock::now();
+	
 	raytrace(width, height, camera, scene, out, sampler, gamma);
 	auto b = std::chrono::high_resolution_clock::now();
 	std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
