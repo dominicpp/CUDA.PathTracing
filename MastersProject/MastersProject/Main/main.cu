@@ -17,6 +17,11 @@
 #include "../Objects/sphere.cuh"
 
 
+#define W 1920
+#define H 960
+#define SAMPLES 32 // Stratified Sampling 32*32=1024 samples
+#define GAMMA 2.2f
+
 __global__ void createObjects(Shape** objects, Shape** scene)
 {
     int count = 0;
@@ -82,6 +87,7 @@ __global__ void setupRNG(int width, int height, uint64_t seed, curandStateXORWOW
     int tidx, tidy, offsetx, offsety, gidx, gidy;
     calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
     int pixelId = gidy * width + gidx;
+    if((gidx >= width) || (gidy >= height)) return;
     curand_init(seed, pixelId, 0, &state[pixelId]);
 }
 
@@ -90,6 +96,7 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
     int tidx, tidy, offsetx, offsety, gidx, gidy;
     calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
     int pixelId = gidy * width + gidx;
+    if ((gidx >= width) || (gidy >= height)) return;
     curandStateXORWOW tempState = state[pixelId];
     
     //##### Stratified Sampling #####
@@ -118,19 +125,13 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
 
 int main()
 {
-    // resolution
-    int nx = 1920;
-    int ny = 960;
     // number of threads per block in x and y dimension
-    int tx = 1;
-    int ty = 1;
-
-    int sample = 32; // rays per pixel -> in fact 32x32 with Stratified Sampling
-    float gamma = 2.2f;
-    int allPixels = nx * ny;
+    int tx = 16;
+    int ty = 16;
+    int allPixels = W * H;
 
     std::ofstream out("doc/cuda_01.ppm");
-    std::cerr << "Rendering a " << nx << "x" << ny << " image with " << sample * sample << " samples per pixel ";
+    std::cerr << "Rendering a " << W << "x" << H << " image with " << SAMPLES * SAMPLES << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
     //##### CUDA MEMORY ALLOCATION #####
@@ -146,8 +147,8 @@ int main()
     cudaMallocManaged((void**)&d_camera, sizeof(Camera*));
 
     //##### CUDA KERNEL ARGS #####
-    dim3 block(tx, ty, 1); //how many threads per block in x and y dimension -> 32x32 = 1024 threads
-    dim3 grid(nx / block.x, ny / block.y, 1); //how many thread blocks in x and y dimension
+    dim3 block(tx, ty, 1); // how many threads per block in x and y dimension -> 32x32 = 1024 threads
+    dim3 grid(W / block.x, H / block.y, 1); // how many thread blocks in x and y dimension
 
     auto start = std::chrono::high_resolution_clock::now();
     //##### KERNEL 1 #####
@@ -167,27 +168,27 @@ int main()
     //##### KERNEL 3 #####
     {
         uint64_t d_seed = 2023;
-        setupRNG << <grid, block, 0, 0 >> > (nx, ny, d_seed, d_state);
+        setupRNG << <grid, block, 0, 0 >> > (W, H, d_seed, d_state);
         cudaGetLastError();
         cudaDeviceSynchronize();
     }
 
     //##### KERNEL 4 #####
     {
-        raytracing << <grid, block, 0, 0 >> > (d_buffer, nx, ny, d_camera, d_scene, d_state, sample, gamma);
+        raytracing << <grid, block, 0, 0 >> > (d_buffer, W, H, d_camera, d_scene, d_state, SAMPLES, GAMMA);
         cudaGetLastError();
         cudaDeviceSynchronize();
     }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::cerr << "\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds\n";
-    out << "P3\n" << nx << " " << ny << "\n255\n";
+    out << "P3\n" << W << " " << H << "\n255\n";
     
-    for (int y = ny - 1; y != 0; --y)
+    for (int y = H - 1; y != 0; --y)
     {
-        for (int x = 0; x != nx; ++x)
+        for (int x = 0; x != W; ++x)
         {
-            int pixelId = y * nx + x;
+            int pixelId = y * W + x;
             int r = int(255 * d_buffer[pixelId][0]);
             int g = int(255 * d_buffer[pixelId][1]);
             int b = int(255 * d_buffer[pixelId][2]);
