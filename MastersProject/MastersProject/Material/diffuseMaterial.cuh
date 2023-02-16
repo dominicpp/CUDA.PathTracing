@@ -20,12 +20,14 @@ __device__ bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Ray&
 {
     // Monte Carlo
     double sum, xRnd, yRnd, zRnd;
-    do {
+    sum = xRnd = yRnd = zRnd = 1.0;
+    while (sum >= 1.0) 
+    {
         xRnd = curand_uniform(state) * 2 - 1.0;
         yRnd = curand_uniform(state) * 2 - 1.0;
         zRnd = curand_uniform(state) * 2 - 1.0;
         sum = pow(xRnd, 2) + pow(yRnd, 2) + pow(zRnd, 2);
-    } while (sum >= 1.0);
+    }
     Vec3 randomPoints(xRnd, yRnd, zRnd);
 
     Vec3 reflectionDirection = hit.positionHit + normalize(hit.normalVector + randomPoints);

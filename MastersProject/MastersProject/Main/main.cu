@@ -25,19 +25,19 @@
 __global__ void createObjects(Shape** objects, Shape** scene)
 {
     int count = 0;
-    objects[count++] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
-    objects[count++] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
-    objects[count++] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // pink diffuse sphere infront of center sphere
-    objects[count++] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 0.33)); // polished metal sphere right from center sphere
-    objects[count++] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(Vec3(1.0, 0.0, 0.0))); // red diffuse sphere
-    objects[count++] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down right
-    objects[count++] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down left
-    objects[count++] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.2, 0.8, 0.2))); // green sphere up right
-    objects[count++] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 1.0)); // polished metal sphere up left
-    objects[count++] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
-    objects[count++] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
-    objects[count++] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
-    objects[count++] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
+    objects[count++] = new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, new Diffuse(Vec3(0.2f, 0.6f, 0.8f))); // center diffuse sphere
+    objects[count++] = new Sphere(Vec3(0.0f, 0.0f, 1.5f), 0.5f, new Diffuse(Vec3(1.0f, 0.0f, 1.0f))); // behind camera diffuse sphere
+    objects[count++] = new Sphere(Vec3(-0.20f, -0.45f, -0.65f), 0.05f, new Diffuse(Vec3(1.0f, 0.45f, 0.5f))); // pink diffuse sphere infront of center sphere
+    objects[count++] = new Sphere(Vec3(0.78f, -0.15f, -1.0f), 0.3f, new PolishedMetal(Vec3(1.0f, 1.0f, 1.0f), 0.33f)); // polished metal sphere right from center sphere
+    objects[count++] = new Sphere(Vec3(-0.78f, -0.15f, -1.0f), 0.3f, new Diffuse(Vec3(1.0f, 0.0f, 0.0f))); // red diffuse sphere
+    objects[count++] = new Sphere(Vec3(0.75f, -0.23f, -0.48f), 0.1f, new Mirror(Vec3(1.0f, 1.0f, 1.0f))); // mirror sphere down right
+    objects[count++] = new Sphere(Vec3(-0.75f, -0.23f, -0.48f), 0.1f, new Mirror(Vec3(1.0f, 1.0f, 1.0f))); // mirror sphere down left
+    objects[count++] = new Sphere(Vec3(0.29f, 0.2f, -0.39f), 0.05f, new Diffuse(Vec3(0.2f, 0.8f, 0.2f))); // green sphere up right
+    objects[count++] = new Sphere(Vec3(-0.29f, 0.2f, -0.39f), 0.05f, new PolishedMetal(Vec3(1.0f, 1.0f, 1.0f), 1.0f)); // polished metal sphere up left
+    objects[count++] = new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, new Diffuse(Vec3(0.85f, 0.85f, 0.85f))); // plane sphere
+    objects[count++] = new Sphere(Vec3(-0.43f, -0.40f, -0.85f), 0.05f, new Mirror(Vec3(1.0f, 0.0f, 1.0f))); // tiny purple mirror sphere 
+    objects[count++] = new Sphere(Vec3(0.40f, -0.40f, -0.75f), 0.09f, new Mirror(Vec3(1.0f, 1.0f, 0.0f))); // yellow mirror sphere
+    objects[count++] = new Sphere(Vec3(-0.15f, 0.21f, -0.56f), 0.06f, new Diffuse(Vec3(0.2f, 0.8f, 0.6f))); // aqua sphere on blue sphere
     *scene = new Group(objects, count);
 }
 
@@ -100,7 +100,7 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
     curandStateXORWOW tempState = state[pixelId];
     
     //##### Stratified Sampling #####
-    Vec3 color(0, 0, 0);
+    Vec3 color(0.0f, 0.0f, 0.0f);
     for (int x = 0; x < sample; ++x)
     {
         for (int y = 0; y < sample; ++y)
@@ -126,8 +126,8 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
 int main()
 {
     // number of threads per block in x and y dimension
-    int tx = 25;
-    int ty = 25;
+    int tx = 16;
+    int ty = 16;
     int allPixels = W * H;
 
     std::ofstream out("doc/cuda_01.ppm");
@@ -189,9 +189,9 @@ int main()
         for (int x = 0; x != W; ++x)
         {
             int pixelId = y * W + x;
-            int r = int(255 * d_buffer[pixelId][0]);
-            int g = int(255 * d_buffer[pixelId][1]);
-            int b = int(255 * d_buffer[pixelId][2]);
+            int r = 255 * d_buffer[pixelId][0];
+            int g = 255 * d_buffer[pixelId][1];
+            int b = 255 * d_buffer[pixelId][2];
             out << r << " " << g << " " << b << "\n";
         }
     }

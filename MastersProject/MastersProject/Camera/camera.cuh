@@ -9,12 +9,11 @@ class Camera
 public:
     __device__ Camera() = default;
     __device__ Camera(float positionX, float positionY)
-    {
-        m_horizontal = Vec3(positionX, 0.0, 0.0);
-        m_vertical = Vec3(0.0, positionY, 0.0);
-        m_origin = Vec3(0.0, 0.0, 0.0);
-        m_cameraPos = Vec3(0.0, 0.2, 0.8);
-    }
+        : m_horizontal(positionX, 0.0f, 0.0f)
+        , m_vertical(0.0f, positionY, 0.0f)
+        , m_origin(0.0f, 0.0f, 0.0f)
+        , m_cameraPos(0.0f, 0.2f, 0.8f)
+        {}
 
     __device__ Vec3 direction(float width, float height) const
     {
