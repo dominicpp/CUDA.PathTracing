@@ -99,7 +99,7 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
     if ((gidx >= width) || (gidy >= height)) return;
     curandStateXORWOW tempState = state[pixelId];
     
-    //##### Stratified Sampling #####
+    // Stratified Sampling
     Vec3 color(0.0f, 0.0f, 0.0f);
     for (int x = 0; x < sample; ++x)
     {
