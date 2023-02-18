@@ -2,6 +2,9 @@
 
 #include "../Hit/shape.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, pp. 38-39
+
 class Group : public Shape
 {
     Shape** m_shapes;

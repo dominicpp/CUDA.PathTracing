@@ -2,6 +2,9 @@
 
 #include "../Material/material.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, p. 175
+
 #define PI 3.14159265358979323846
 
 class PolishedMetal : public Material

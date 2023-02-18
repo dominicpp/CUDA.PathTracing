@@ -3,6 +3,9 @@
 #include <cmath>
 #include <random>
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, pp. 15-21
+
 struct Vec3
 {
     float a[3];

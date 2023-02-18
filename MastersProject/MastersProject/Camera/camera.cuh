@@ -2,6 +2,9 @@
 
 #include "../Ray/ray.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, pp. 74-75
+
 class Camera
 {
     Vec3 m_horizontal, m_vertical, m_origin, m_cameraPos;

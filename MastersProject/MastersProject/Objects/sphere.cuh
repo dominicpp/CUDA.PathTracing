@@ -2,6 +2,9 @@
 
 #include "../Hit/shape.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, pp. 44-45
+
 class Material;
 
 class Sphere : public Shape
@@ -38,7 +41,7 @@ __device__ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, Rec
 		{
 			hit.rayParameter = t;
 			hit.positionHit = ray.pointAt(hit.rayParameter);
-			hit.normalVector = (hit.positionHit - m_position) / m_radius;
+			hit.normalVector = normalize((hit.positionHit - m_position) / m_radius);
 			hit.material = m_material;
 			return true;
 		}

@@ -2,6 +2,9 @@
 
 #include "../Material/material.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612, pp. 178-179
+
 class Diffuse : public Material
 {
     Vec3 m_albedo;
