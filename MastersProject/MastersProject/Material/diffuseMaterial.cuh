@@ -21,7 +21,7 @@ __device__ Vec3 Diffuse::albedo() const { return m_albedo; }
 
 __device__ bool Diffuse::scatteredRay(const Ray& ray, const RecordHit& hit, Ray& scattered, curandStateXORWOW* state) const
 {
-    // Monte Carlo
+    // Monte Carlo Rejection Method
     double sum, xRnd, yRnd, zRnd;
     sum = xRnd = yRnd = zRnd = 1.0;
     while (sum >= 1.0) 

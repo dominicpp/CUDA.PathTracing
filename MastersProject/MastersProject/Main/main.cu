@@ -126,11 +126,11 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
 int main()
 {
     // number of threads per block in x and y dimension
-    int tx = 16;
-    int ty = 16;
+    int tx = 1;
+    int ty = 1;
     int allPixels = W * H;
 
-    std::ofstream out("doc/cuda_01.ppm");
+    std::ofstream out("doc/cuda_test_lenz.ppm");
     std::cerr << "Rendering a " << W << "x" << H << " image with " << SAMPLES * SAMPLES << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 

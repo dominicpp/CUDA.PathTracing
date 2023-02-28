@@ -32,6 +32,7 @@ __device__ bool PolishedMetal::scatteredRay(const Ray& ray, const RecordHit& hit
 
     Vec3 reflectionDirection = normalize(ray.getDirection()) - 2 * dotProduct(normalize(ray.getDirection()), hit.normalVector) * hit.normalVector;
     if (m_scatter_factor != 0.0)
+        // FRAGE NFÜRS KOLLOQZUIUM
         scattered = Ray(hit.positionHit, reflectionDirection + m_scatter_factor * randomPoints);
     if (dotProduct(scattered.getDirection(), hit.normalVector) > 0 && dotProduct(scattered.getDirection(), hit.normalVector) < PI
         || dotProduct(scattered.getDirection(), hit.normalVector) < 1) return true;
