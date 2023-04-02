@@ -2,8 +2,12 @@
 
 #include "../Material/material.cuh"
 
-// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
-// Routledge, 2008, isbn: 9781568814612, pp. 178-179
+// Source 1: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+// Source 2: P. Shirley, S. Marschner, [Book] “Fundamentals of Computer Graphics,” 3rd ed., 
+// A K Peters / CRC Press, 2009, isbn: 9781568814698.
+// Source 3: P. Shirley, [eBook] “Ray Tracing in One Weekend, ” vers. 3.2.3, S. Hollaschand and T.D. Black, Ed., Peter Shirley,
+// 2018 - 2020, Available: https://raytracing.github.io/books/RayTracingInOneWeekend.html [Accessed 19 November 2022].
 
 class Diffuse : public Material
 {

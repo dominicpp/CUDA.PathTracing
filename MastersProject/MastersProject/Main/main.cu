@@ -16,13 +16,21 @@
 #include "../Material/polishedMetalMaterial.cuh"
 #include "../Objects/sphere.cuh"
 
+// Source 1: R. Allen (Principal Architect at NVIDIA), [Online Article] “Accelerated Ray Tracing in One Weekend in CUDA,”
+// 05 November 2018, developer.nvidia.com, Available: https://developer.nvidia.com/blog/accelerated-ray-tracing-cuda/ [Accessed 20 January 2023].
+// Source 2: P. Shirley, [eBook] “Ray Tracing in One Weekend, ” vers. 3.2.3, S. Hollaschand and T.D. Black, Ed., Peter Shirley,
+// 2018 - 2020, Available: https://raytracing.github.io/books/RayTracingInOneWeekend.html [Accessed 19 November 2022].
+// Source 3: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+// Source 4: A. Segovia, X. Li, G. Gao, [Journal] “Iterative layer - based raytracing on CUDA,” 2009 IEEE 28th International Performance Computing
+// and Communications Conference, Scottsdale, AZ, USA, pp. 248 - 255, doi: https://doi.org/10.1109/PCCC.2009.5403843 [Accessed 19 January 2023].
 
 #define W 1920
 #define H 960
 #define SAMPLES 32 // Stratified Sampling 32*32=1024 samples
 #define GAMMA 2.2f
 
-__global__ void createObjects(Shape** objects, Shape** scene)
+__global__ void createObjects(Shape** objects, Shape** scene, Camera** d_camera)
 {
     int count = 0;
     objects[count++] = new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, new Diffuse(Vec3(0.2f, 0.6f, 0.8f))); // center diffuse sphere
@@ -43,6 +51,7 @@ __global__ void createObjects(Shape** objects, Shape** scene)
 
 __global__ void createCamera(Camera** d_camera) { *d_camera = new Camera(4.0f, 2.0f); }
 
+// replaced recursive algorithm to compute the radiance of a given ray
 __device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, curandStateXORWOW* state)
 {
     Ray tempRay = ray;
@@ -65,7 +74,6 @@ __device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, cura
             }
             else return Vec3(0.0f, 0.0f, 0.0f);
         }
-        // background
         return attenuation;
     }
     return Vec3(0.0f, 0.0f, 0.0f);
@@ -81,12 +89,12 @@ __device__ void calculatePixelId(int width, int& tidx, int& tidy, int& offsetx, 
     gidy = tidy + offsety;
 }
 
-//##### Setup (R)andom (N)umber (G)enerator #####
+//##### Setup unique (R)andom (N)umber (G)enerator for each pixel #####
 __global__ void setupRNG(int width, int height, uint64_t seed, curandStateXORWOW* state)
 {
     int tidx, tidy, offsetx, offsety, gidx, gidy;
     calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
-    int pixelId = gidy * width + gidx;
+    int pixelId = gidy * width + gidx; // calculate unique pixel id for each pixel
     if((gidx >= width) || (gidy >= height)) return;
     curand_init(seed, pixelId, 0, &state[pixelId]);
 }
@@ -95,7 +103,7 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
 {
     int tidx, tidy, offsetx, offsety, gidx, gidy;
     calculatePixelId(width, tidx, tidy, offsetx, offsety, gidx, gidy);
-    int pixelId = gidy * width + gidx;
+    int pixelId = gidy * width + gidx; // calculate unique pixel id for each pixel
     if ((gidx >= width) || (gidy >= height)) return;
     curandStateXORWOW tempState = state[pixelId];
     
@@ -125,14 +133,12 @@ __global__ void raytracing(Vec3* buffer, int width, int height, Camera** camera,
 
 int main()
 {
-    // number of threads per block in x and y dimension
-    int tx = 1;
-    int ty = 1;
+    // number of threads per thread block in x and y dimension
+    int tx = 16;
+    int ty = 16;
     int allPixels = W * H;
 
-    std::ofstream out("doc/cuda_test_lenz.ppm");
-    std::cerr << "Rendering a " << W << "x" << H << " image with " << SAMPLES * SAMPLES << " samples per pixel ";
-    std::cerr << "in " << tx << "x" << ty << " blocks.\n";
+    std::ofstream out("doc/test.ppm");
 
     //##### CUDA MEMORY ALLOCATION #####
     curandStateXORWOW* d_state; // Random Number Generator
@@ -147,13 +153,13 @@ int main()
     cudaMallocManaged((void**)&d_camera, sizeof(Camera*));
 
     //##### CUDA KERNEL ARGS #####
-    dim3 block(tx, ty, 1); // how many threads per block in x and y dimension -> 32x32 = 1024 threads
-    dim3 grid(W / block.x, H / block.y, 1); // how many thread blocks in x and y dimension
+    dim3 block(tx, ty, 1);
+    dim3 grid(W / block.x, H / block.y, 1);
 
     auto start = std::chrono::high_resolution_clock::now();
     //##### KERNEL 1 #####
     {
-        createObjects << <1, 1, 0, 0 >> > (d_objects, d_scene);
+        createObjects << <1, 1, 0, 0 >> > (d_objects, d_scene, d_camera);
 		cudaGetLastError();
 		cudaDeviceSynchronize();
     }
@@ -184,11 +190,12 @@ int main()
     std::cerr << "\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds\n";
     out << "P3\n" << W << " " << H << "\n255\n";
     
+    // iterate through each pixel and write color to an output stream.
     for (int y = H - 1; y != 0; --y)
     {
         for (int x = 0; x != W; ++x)
         {
-            int pixelId = y * W + x;
+            int pixelId = y * W + x; // calculate unique pixel id for each pixel
             int r = 255 * d_buffer[pixelId][0];
             int g = 255 * d_buffer[pixelId][1];
             int b = 255 * d_buffer[pixelId][2];
@@ -202,6 +209,7 @@ int main()
     cudaFree(d_objects);
     cudaFree(d_scene);
     cudaFree(d_camera);
+
     //##### remove all gpu allocations #####
     cudaDeviceReset();
 }
