@@ -9,8 +9,6 @@
 // Source 3: P. Shirley, [eBook] “Ray Tracing in One Weekend, ” vers. 3.2.3, S. Hollaschand and T.D. Black, Ed., Peter Shirley,
 // 2018 - 2020, Available: https://raytracing.github.io/books/RayTracingInOneWeekend.html [Accessed 19 November 2022].
 
-#define PI 3.14159265358979323846
-
 class PolishedMetal : public Material
 {
     Vec3 m_albedo;

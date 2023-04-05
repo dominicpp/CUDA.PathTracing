@@ -74,7 +74,7 @@ __device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, cura
             }
             else return Vec3(0.0f, 0.0f, 0.0f);
         }
-        return attenuation;
+        return attenuation; // background
     }
     return Vec3(0.0f, 0.0f, 0.0f);
 }
