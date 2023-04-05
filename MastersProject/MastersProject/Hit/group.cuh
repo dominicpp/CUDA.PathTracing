@@ -2,6 +2,9 @@
 
 #include "../Hit/shape.cuh"
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+
 class Group : public Shape
 {
     Shape** m_shapes;
@@ -14,6 +17,7 @@ public:
     virtual bool hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const override;
 };
 
+// determine whether a given ray intersects with any shapes in a group
 bool Group::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit) const
 {
     RecordHit closestHit;

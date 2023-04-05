@@ -1,6 +1,4 @@
-﻿#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include <fstream>
+﻿#include <fstream>
 #include <iostream>
 #include <chrono>
 
@@ -14,45 +12,57 @@
 #include "../Material/polishedMetalMaterial.cuh"
 #include "../Objects/sphere.cuh"
 
+// Source 3: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+// Source 2: P. Shirley, [eBook] “Ray Tracing in One Weekend, ” vers. 3.2.3, S. Hollaschand and T.D. Black, Ed., Peter Shirley,
+// 2018 - 2020, Available: https://raytracing.github.io/books/RayTracingInOneWeekend.html [Accessed 19 November 2022].
+
+#define W 1920
+#define H 960
+#define SAMPLES 32 // Stratified Sampling 32*32=1024 samples
+#define GAMMA 2.2f
+
+// recursive algorithm to compute the radiance of a given ray
 Vec3 calculateRadiance(const Ray& ray, Shape* scene, int depth)
 {
 	RecordHit hit;
 
-	if (depth <= 0) { return Vec3(0.0, 0.0, 0.0); }
-	if (scene->hitIntersect(ray, 0.001, std::numeric_limits<float>::max(), hit))
+	if (depth <= 0) { return Vec3(0.0f, 0.0f, 0.0f); }
+	if (scene->hitIntersect(ray, 0.001f, std::numeric_limits<float>::max(), hit))
 	{
 		Ray scattered;
 		Vec3 albedo = hit.material->albedo();
 		if (hit.material->scatteredRay(ray, hit, scattered))
 			return albedo * calculateRadiance(scattered, scene, depth - 1);
-		else return Vec3(0.0, 0.0, 0.0);
+		else return Vec3(0.0f, 0.0f, 0.0f);
 	}
-	else return Vec3(1.0, 1.0, 1.0); // background
+	else return Vec3(0.95f, 0.95f, 1.0f); // background
 }
 
-void raytrace(int width, int height, Camera* camera, Shape* scene, std::ofstream& out, int sampler, float gamma)
+void raytracing(int width, int height, Camera* camera, Shape* scene, std::ofstream& out, int sample, float gamma)
 {
-	for (int y = height-1; y != 0; --y)
+	// iterate through each pixel and write color to an output stream.
+	for (int y = height - 1; y != 0; --y)
 	{
 		for (int x = 0; x != width; ++x)
 		{
-			Vec3 imagePixel(0.0, 0.0, 0.0);
-			for (int yi = 0; yi < sampler; ++yi)
+			// Stratified Sampling
+			Vec3 color(0.0, 0.0, 0.0);
+			for (int xi = 0; xi < sample; ++xi)
 			{
-				for (int xi = 0; xi < sampler; ++xi)
+				for (int yi = 0; yi < sample; ++yi)
 				{
-					float ys = float(y + ((yi + random_double())) / sampler) / float(height);
-					float xs = float(x + ((xi + random_double())) / sampler) / float(width);
-
-					Ray ray = camera->generateRay(xs, ys);
-					imagePixel = imagePixel + calculateRadiance(ray, scene, 15);
+					float sx = float(x + ((xi + random_number())) / sample) / float(width);
+					float sy = float(y + ((yi + random_number())) / sample) / float(height);
+					Ray ray = camera->generateRay(sx, sy);
+					color = color + calculateRadiance(ray, scene, 15);
 				}
 			}
-			imagePixel = imagePixel / float(sampler * sampler);
-
-			int r = int(255 * (pow(imagePixel[0], 1 / gamma)));
-			int g = int(255 * (pow(imagePixel[1], 1 / gamma)));
-			int b = int(255 * (pow(imagePixel[2], 1 / gamma)));
+			Vec3 setPixel = color;
+			setPixel = color / float(sample * sample);
+			int r = int(255 * (pow(setPixel[0], 1 / gamma)));
+			int g = int(255 * (pow(setPixel[1], 1 / gamma)));
+			int b = int(255 * (pow(setPixel[2], 1 / gamma)));
 			out << r << " " << g << " " << b << "\n";
 		}
 	}
@@ -60,38 +70,29 @@ void raytrace(int width, int height, Camera* camera, Shape* scene, std::ofstream
 
 int main()
 {
-	float aspect_ratio = (16 / 8.5);
-	int width = 1920; // resolution
-	/*int height = static_cast<int>(width / aspect_ratio);*/
-	int height = 960;
-	int sampler = 32; // rays per pixel
-	float gamma = 2.2f;
-
-	//float viewport_height = 2.0;
-	//float viewport_width = aspect_ratio * viewport_height;
 	Camera* camera = new Camera(4.0f, 2.0f);
 
-	std::ofstream out("doc/cpp_01.ppm");
-	out << "P3\n" << width << " " << height << "\n255\n";
-	auto a = std::chrono::high_resolution_clock::now();
-	Shape* shapes[13];
-	shapes[0] = new Sphere(Vec3(0.0, 0.0, -1.0), 0.5, new Diffuse(Vec3(0.2, 0.6, 0.8))); // center diffuse sphere
-	shapes[1] = new Sphere(Vec3(0.0, 0.0, 1.5), 0.5, new Diffuse(Vec3(1.0, 0.0, 1.0))); // behind camera diffuse sphere
-	shapes[2] = new Sphere(Vec3(-0.20, -0.45, -0.65), 0.05, new Diffuse(Vec3(1.0, 0.45, 0.5))); // pink diffuse sphere infront of center sphere
-	shapes[3] = new Sphere(Vec3(0.78, -0.15, -1.0), 0.3, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 0.23)); // polished metal sphere right from center sphere
-	shapes[4] = new Sphere(Vec3(-0.78, -0.15, -1.0), 0.3, new Diffuse(Vec3(1.0, 0.0, 0.0))); // red diffuse sphere
-	shapes[5] = new Sphere(Vec3(0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down right
-	shapes[6] = new Sphere(Vec3(-0.75, -0.23, -0.48), 0.1, new Mirror(Vec3(1.0, 1.0, 1.0))); // mirror sphere down left
-	shapes[7] = new Sphere(Vec3(0.29, 0.2, -0.39), 0.05, new Diffuse(Vec3(0.2, 0.8, 0.2))); // green sphere up right
-	shapes[8] = new Sphere(Vec3(-0.29, 0.2, -0.39), 0.05, new PolishedMetal(Vec3(1.0, 1.0, 1.0), 1.0)); // polished metal sphere up left
-	shapes[9] = new Sphere(Vec3(0.0, -100.5, -1.0), 100, new Diffuse(Vec3(0.85, 0.85, 0.85))); // plane sphere
-	shapes[10] = new Sphere(Vec3(-0.43, -0.40, -0.85), 0.05, new Mirror(Vec3(1.0, 0.0, 1.0))); // tiny purple mirror sphere 
-	shapes[11] = new Sphere(Vec3(0.40, -0.40, -0.75), 0.09, new Mirror(Vec3(1.0, 1.0, 0.0))); // yellow mirror sphere
-	shapes[12] = new Sphere(Vec3(-0.15, 0.21, -0.56), 0.06, new Diffuse(Vec3(0.2, 0.8, 0.6))); // aqua sphere on blue sphere
-	Shape* scene = new Group(shapes, 13);
-
+	std::ofstream out("doc/cpp_test.ppm");
+	out << "P3\n" << W << " " << H << "\n255\n";
 	
-	raytrace(width, height, camera, scene, out, sampler, gamma);
-	auto b = std::chrono::high_resolution_clock::now();
-	std::cerr << "\n\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " seconds\n";
+	auto start = std::chrono::high_resolution_clock::now();
+	Shape* objects[13];
+	objects[0] = new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, new Diffuse(Vec3(0.2f, 0.6f, 0.8f))); // center diffuse sphere
+	objects[1] = new Sphere(Vec3(0.0f, 0.0f, 1.5f), 0.5f, new Diffuse(Vec3(1.0f, 0.0f, 1.0f))); // behind camera diffuse sphere
+	objects[2] = new Sphere(Vec3(-0.20f, -0.45f, -0.65f), 0.05f, new Diffuse(Vec3(1.0f, 0.45f, 0.5f))); // pink diffuse sphere infront of center sphere
+	objects[3] = new Sphere(Vec3(0.78f, -0.15f, -1.0f), 0.3f, new PolishedMetal(Vec3(1.0f, 1.0f, 1.0f), 0.33f)); // polished metal sphere right from center sphere
+	objects[4] = new Sphere(Vec3(-0.78f, -0.15f, -1.0f), 0.3f, new Diffuse(Vec3(1.0f, 0.0f, 0.0f))); // red diffuse sphere
+	objects[5] = new Sphere(Vec3(0.75f, -0.23f, -0.48f), 0.1f, new Mirror(Vec3(1.0f, 1.0f, 1.0f))); // mirror sphere down right
+	objects[6] = new Sphere(Vec3(-0.75f, -0.23f, -0.48f), 0.1f, new Mirror(Vec3(1.0f, 1.0f, 1.0f))); // mirror sphere down left
+	objects[7] = new Sphere(Vec3(0.29f, 0.2f, -0.39f), 0.05f, new Diffuse(Vec3(0.2f, 0.8f, 0.2f))); // green sphere up right
+	objects[8] = new Sphere(Vec3(-0.29f, 0.2f, -0.39f), 0.05f, new PolishedMetal(Vec3(1.0f, 1.0f, 1.0f), 1.0f)); // polished metal sphere up left
+	objects[9] = new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, new Diffuse(Vec3(0.85f, 0.85f, 0.85f))); // plane sphere
+	objects[10] = new Sphere(Vec3(-0.43f, -0.40f, -0.85f), 0.05f, new Mirror(Vec3(1.0f, 0.0f, 1.0f))); // tiny purple mirror sphere 
+	objects[11] = new Sphere(Vec3(0.40f, -0.40f, -0.75f), 0.09f, new Mirror(Vec3(1.0f, 1.0f, 0.0f))); // yellow mirror sphere
+	objects[12] = new Sphere(Vec3(-0.15f, 0.21f, -0.56f), 0.06f, new Diffuse(Vec3(0.2f, 0.8f, 0.6f))); // aqua sphere on blue sphere
+	Shape* scene = new Group(objects, 13);
+
+	raytracing(W, H, camera, scene, out, SAMPLES, GAMMA);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cerr << "\nRendering took: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds\n";
 }

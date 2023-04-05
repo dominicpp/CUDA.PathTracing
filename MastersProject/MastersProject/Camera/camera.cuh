@@ -2,6 +2,11 @@
 
 #include "../Ray/ray.cuh"
 
+// Source 1: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+// Source 2: P. Shirley, [eBook] “Ray Tracing in One Weekend, ” vers. 3.2.3, S. Hollaschand and T.D. Black, Ed., Peter Shirley,
+// 2018 - 2020, Available: https://raytracing.github.io/books/RayTracingInOneWeekend.html [Accessed 19 November 2022].
+
 class Camera
 {
     Vec3 m_horizontal, m_vertical, m_origin, m_cameraPos;
@@ -9,12 +14,11 @@ class Camera
 public:
     Camera() = default;
     Camera(float positionX, float positionY)
-    {
-        m_horizontal = Vec3(positionX, 0.0, 0.0);
-        m_vertical = Vec3(0.0, positionY, 0.0);
-        m_origin = Vec3(0.0, 0.0, 0.0);
-        m_cameraPos = Vec3(0.0, 0.2, 0.8);
-    }
+        : m_horizontal(positionX, 0.0f, 0.0f)
+        , m_vertical(0.0f, positionY, 0.0f)
+        , m_origin(0.0f, 0.0f, 0.0f)
+        , m_cameraPos(0.0f, 0.2f, 0.8f)
+    {}
 
     Vec3 direction(float width, float height) const
     {

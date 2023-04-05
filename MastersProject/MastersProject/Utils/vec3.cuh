@@ -3,6 +3,9 @@
 #include <cmath>
 #include <random>
 
+// Source: P. Shirley, R. K. Morley, [Book] “Realistic Ray Tracing,” 2nd ed., 
+// Routledge, 2008, isbn: 9781568814612.
+
 struct Vec3
 {
     float a[3];
@@ -91,12 +94,7 @@ inline Vec3 normalize(Vec3 v)
     return v / v.length();
 }
 
-inline double random_double() 
+inline double random_number() 
 {
-    double min = 0.0;
-    double max = 1.0;
-    double random = ((double)rand()) / RAND_MAX;
-    double range = (max - min) * random;
-    double number = min + range;
-    return number;
+    return static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
 }
