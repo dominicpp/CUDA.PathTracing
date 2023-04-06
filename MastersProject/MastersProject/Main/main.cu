@@ -49,7 +49,7 @@ __global__ void createObjects(Shape** objects, Shape** scene, Camera** d_camera)
     *scene = new Group(objects, count);
 }
 
-__global__ void createCamera(Camera** d_camera) { *d_camera = new Camera(4.0f, 2.0f); }
+__global__ void createCamera(Camera** d_camera) { *d_camera = new Camera(6.0f, 3.0f); }
 
 // replaced recursive algorithm to compute the radiance of a given ray
 __device__ Vec3 calculateRadiance(const Ray& ray, Shape** scene, int depth, curandStateXORWOW* state)
@@ -138,7 +138,7 @@ int main()
     int ty = 16;
     int allPixels = W * H;
 
-    std::ofstream out("doc/test.ppm");
+    std::ofstream out("doc/cuda_test.ppm");
 
     //##### CUDA MEMORY ALLOCATION #####
     curandStateXORWOW* d_state; // Random Number Generator
