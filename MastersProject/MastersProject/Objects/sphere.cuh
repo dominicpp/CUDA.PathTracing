@@ -41,7 +41,7 @@ bool Sphere::hitIntersect(const Ray& ray, float tmin, float tmax, RecordHit& hit
 		{
 			hit.rayParameter = t;
 			hit.positionHit = ray.pointAt(hit.rayParameter);
-			hit.normalVector = (hit.positionHit - m_position) / m_radius;
+			hit.normalVector = normalize((hit.positionHit - m_position) / m_radius);
 			hit.material = m_material;
 			return true;
 		}

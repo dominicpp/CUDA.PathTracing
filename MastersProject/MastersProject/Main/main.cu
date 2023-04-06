@@ -70,7 +70,7 @@ void raytracing(int width, int height, Camera* camera, Shape* scene, std::ofstre
 
 int main()
 {
-	Camera* camera = new Camera(4.0f, 2.0f);
+	Camera* camera = new Camera(6.0f, 3.0f);
 
 	std::ofstream out("doc/cpp_test.ppm");
 	out << "P3\n" << W << " " << H << "\n255\n";
