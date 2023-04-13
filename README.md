@@ -6,7 +6,7 @@ The goal of this project was to find out which parallelization techniques have a
 
 The main branch contains the sequential C/C++ implementation and the cuda_impl branch contains the parallel CUDA implementation.
 
-Master's Thesis Project was developed from scratch within a few weeks. It began as a sequential Path Tracer using C/C++, which was later converted into a parallel Path Tracer using CUDA.
+This Master's Thesis Project was developed from scratch within a few weeks. It began as a sequential Path Tracer using C/C++, which was later converted into a parallel Path Tracer using CUDA.
 
 Numerous important aspects of computer graphics were implemented, such as a virtual camera system, ray generation and simulated light rays, super-sampling including stratified sampling, Monte Carlo integration for diffuse virtual objects, surface reflections with various materials, recursive algorithm for light propagation, and more.
 
